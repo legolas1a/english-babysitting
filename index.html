@@ -682,37 +682,42 @@
         });
 
         // --- INIT ---
-        // --- SWIPE LOGIC (Thêm vào cuối script) ---
+// --- SWIPE LOGIC (TOÀN MÀN HÌNH + CHỐNG CUỘN DỌC) ---
         let touchStartX = 0;
-        let touchEndX = 0;
-        const minSwipeDistance = 50; // Phải vuốt ít nhất 50px mới tính
+        let touchStartY = 0;
+        const minSwipeDistance = 50; // Phải vuốt tối thiểu 50px
 
-        const cardArea = document.getElementById('flashcard-area');
-
-        // 1. Chạm ngón tay vào màn hình
-        cardArea.addEventListener('touchstart', (e) => {
+        // 1. Bắt sự kiện chạm trên TOÀN BỘ trang web
+        document.addEventListener('touchstart', (e) => {
             touchStartX = e.changedTouches[0].screenX;
+            touchStartY = e.changedTouches[0].screenY;
         }, { passive: true });
 
-        // 2. Nhấc ngón tay ra
-        cardArea.addEventListener('touchend', (e) => {
-            touchEndX = e.changedTouches[0].screenX;
-            handleSwipe();
+        // 2. Bắt sự kiện nhấc tay
+        document.addEventListener('touchend', (e) => {
+            const touchEndX = e.changedTouches[0].screenX;
+            const touchEndY = e.changedTouches[0].screenY;
+            handleSwipe(touchEndX, touchEndY);
         }, { passive: true });
 
-        // 3. Tính toán hướng vuốt
-        function handleSwipe() {
-            const distance = touchStartX - touchEndX;
+        // 3. Xử lý tính toán
+        function handleSwipe(endX, endY) {
+            const distanceX = touchStartX - endX; // Khoảng cách ngang
+            const distanceY = touchStartY - endY; // Khoảng cách dọc
 
-            // Nếu khoảng cách vuốt > 50px
-            if (Math.abs(distance) > minSwipeDistance) {
-                // Vuốt sang trái (StartX lớn hơn EndX) -> Next
-                if (distance > 0) {
-                    nextCard(); 
-                } 
-                // Vuốt sang phải (StartX nhỏ hơn EndX) -> Prev
-                else {
-                    prevCard(); 
+            // QUAN TRỌNG: Chỉ xử lý nếu vuốt Ngang nhiều hơn vuốt Dọc
+            // (Để tránh trường hợp mày lướt web xuống dưới mà nó lại next bài)
+            if (Math.abs(distanceX) > Math.abs(distanceY)) {
+                
+                // Kiểm tra độ dài cú vuốt có đủ không
+                if (Math.abs(distanceX) > minSwipeDistance) {
+                    if (distanceX > 0) {
+                        // Vuốt sang trái -> Next
+                        nextCard(); 
+                    } else {
+                        // Vuốt sang phải -> Prev
+                        prevCard(); 
+                    }
                 }
             }
         }
@@ -721,6 +726,7 @@
     </script>
 </body>
 </html>
+
 
 
 
