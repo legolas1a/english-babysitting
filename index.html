@@ -24,7 +24,15 @@
     </style>
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-900 overflow-hidden relative">
-
+<div class="fixed top-4 left-4 z-50 flex gap-2">
+        <button id="btn-export" class="w-10 h-10 bg-blue-600 hover:bg-blue-500 rounded-full text-white shadow-lg flex items-center justify-center transition active:scale-95" title="Xuất dữ liệu (Backup)">
+            <i class="fas fa-file-export"></i>
+        </button>
+        <button id="btn-import" class="w-10 h-10 bg-purple-600 hover:bg-purple-500 rounded-full text-white shadow-lg flex items-center justify-center transition active:scale-95" title="Nhập dữ liệu (Restore)">
+            <i class="fas fa-file-import"></i>
+        </button>
+        <input type="file" id="file-import" class="hidden" accept=".json">
+    </div>
     <button id="btn-add-modal" class="fixed bottom-6 right-6 w-14 h-14 bg-green-600 hover:bg-green-500 rounded-full text-white shadow-2xl z-50 flex items-center justify-center transition-transform active:scale-90 border-2 border-green-400">
         <i class="fas fa-plus text-2xl"></i>
     </button>
@@ -589,7 +597,10 @@
             inputEn: document.getElementById('input-en'),
             inputVi: document.getElementById('input-vi'),
             spinner: document.getElementById('spinner'),
-            btnDelete: document.getElementById('btn-delete')
+            btnDelete: document.getElementById('btn-delete'),
+            btnExport: document.getElementById('btn-export'),
+            btnImport: document.getElementById('btn-import'),
+            fileImport: document.getElementById('file-import')
         };
 
         // --- RENDER & LOGIC CARD ---
@@ -811,6 +822,75 @@
             if (e.key === 'ArrowRight') nextCard();
             if (e.key === 'ArrowLeft') prevCard();
             if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); flipCard(); }
+        });
+
+        // --- LOGIC EXPORT (XUẤT FILE) ---
+        els.btnExport.addEventListener('click', () => {
+            const stored = localStorage.getItem('my_flashcards');
+            const dataStr = stored || "[]"; // Lấy dữ liệu cá nhân
+            
+            // Tạo file ảo để tải về
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            const exportFileDefaultName = 'my_flashcards_backup.json';
+
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click(); // Tự động bấm tải
+        });
+
+        // --- LOGIC IMPORT (NHẬP FILE) ---
+        // 1. Bấm nút Import -> Kích hoạt thẻ input file ẩn
+        els.btnImport.addEventListener('click', () => {
+            els.fileImport.click();
+        });
+
+        // 2. Khi chọn file xong -> Xử lý
+        els.fileImport.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const importedData = JSON.parse(event.target.result);
+                    
+                    if (!Array.isArray(importedData)) {
+                        alert("File lỗi! Không đúng định dạng.");
+                        return;
+                    }
+
+                    // Lấy dữ liệu hiện tại
+                    const stored = localStorage.getItem('my_flashcards');
+                    let currentData = stored ? JSON.parse(stored) : [];
+
+                    // Gộp dữ liệu (Bỏ qua từ trùng)
+                    let countAdded = 0;
+                    importedData.forEach(newCard => {
+                        const exists = currentData.some(c => c.en.toLowerCase() === newCard.en.toLowerCase());
+                        if (!exists) {
+                            currentData.unshift(newCard); // Thêm từ mới lên đầu
+                            countAdded++;
+                        }
+                    });
+
+                    // Lưu ngược lại vào bộ nhớ
+                    localStorage.setItem('my_flashcards', JSON.stringify(currentData));
+
+                    // Reload lại app
+                    fullData = loadFullData();
+                    filteredData = [...fullData];
+                    currentIndex = 0;
+                    renderCard();
+
+                    alert(`Thành công! Đã nhập thêm ${countAdded} từ mới.`);
+                } catch (err) {
+                    console.error(err);
+                    alert("Lỗi đọc file json!");
+                }
+            };
+            reader.readAsText(file);
+            e.target.value = ''; // Reset input để chọn lại file cũ được
         });
 
         renderCard();
