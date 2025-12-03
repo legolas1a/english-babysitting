@@ -86,7 +86,7 @@
                     <i class="fas fa-volume-high text-white text-lg"></i>
                 </button>
                 <p class="mt-4 text-gray-500 text-xs flex items-center gap-2">
-                    <i class="fas fa-hand-pointer"></i> Tab/Space or Click to Flip
+                    <i class="fas fa-hand-pointer"></i> Chạm hoặc Click để lật thẻ
                 </p>
             </div>
             <div class="absolute w-full h-full bg-white rounded-2xl shadow-2xl p-8 flex flex-col items-center justify-center backface-hidden rotate-y-180 border-2 border-gray-300">
@@ -128,10 +128,9 @@
     <script>
         // --- DATASET ---
         const defaultData = [
-            { en: "feeding", vi: "cho ăn", ipa: "/ˈfiːdɪŋ/" },
-{ en: "nursing", vi: "chăm sóc mẹ/bé", ipa: "/ˈnɜːrsɪŋ/" },
+{ en: "feeding", vi: "cho ăn", ipa: "/ˈfiːdɪŋ/" },
+{ en: "nursing", vi: "chăm sóc (mẹ/bé)", ipa: "/ˈnɜːrsɪŋ/" },
 { en: "breastfeeding", vi: "cho bú mẹ", ipa: "/ˈbrɛstˌfiːdɪŋ/" },
-{ en: "formula", vi: "sữa công thức", ipa: "/ˈfɔːrmjələ/" },
 { en: "burp", vi: "vỗ ợ", ipa: "/bɜːrp/" },
 { en: "crib", vi: "cũi", ipa: "/krɪb/" },
 { en: "pacifier", vi: "ti giả", ipa: "/ˈpæsɪfaɪər/" },
@@ -624,7 +623,7 @@
 
             els.indexDisplay.textContent = `${currentIndex + 1} / ${filteredData.length}`;
             els.counter.textContent = filteredData.length === fullData.length 
-                ? `Total: ${fullData.length} words (Randomized)`
+                ? `Tổng: ${fullData.length} thẻ (Randomized)`
                 : `Found: ${filteredData.length} / ${fullData.length}`;
             
             els.btnPrev.disabled = filteredData.length <= 1;
