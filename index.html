@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Flashcards Pro</title> 
+    <link rel="icon" type="image/png" href="https://lh3.googleusercontent.com/a/ACg8ocLm2zmxrsiuv3p344IkTBYO35_JmBkGlnUHW5wfOU9thQ07tSFz=s360-c-no">
+<link rel="shortcut icon" type="image/png" href="https://lh3.googleusercontent.com/a/ACg8ocLm2zmxrsiuv3p344IkTBYO35_JmBkGlnUHW5wfOU9thQ07tSFz=s360-c-no">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link rel="manifest" href="manifest.json">
@@ -549,144 +551,416 @@
 { en: "look", vi: "nhìn", ipa: "/lʊk/" },
 { en: "watch", vi: "xem", ipa: "/wɑːtʃ/" },
         ];
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Flashcards Pro</title> 
-    <link rel="icon" type="image/png" href="https://lh3.googleusercontent.com/a/ACg8ocLm2zmxrsiuv3p344IkTBYO35_JmBkGlnUHW5wfOU9thQ07tSFz=s360-c-no">
-    <link rel="shortcut icon" type="image/png" href="https://lh3.googleusercontent.com/a/ACg8ocLm2zmxrsiuv3p344IkTBYO35_JmBkGlnUHW5wfOU9thQ07tSFz=s360-c-no">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#111827">
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3405/3405802.png">
+       // --- 2. LOGIC MỚI (CHUNG) ---
+        
+        let currentMode = 'learning'; // 'learning' hoặc 'mastered'
 
-    <style>
-        body {
-            background-color: #0f172a;
-            color: #e2e8f0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            -webkit-tap-highlight-color: transparent;
+        // Hàm xáo trộn (Random)
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
         }
-        .perspective-1000 { perspective: 1000px; }
-        .transform-style-3d { transform-style: preserve-3d; }
-        .backface-hidden { backface-visibility: hidden; }
-        .rotate-y-180 { transform: rotateY(180deg); }
-        .card-container { transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .card-flipped { transform: rotateY(180deg); }
-        
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: #1e293b; }
-        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
-        
-        .tab-active { background-color: #3b82f6; color: white; border-color: #3b82f6; }
-        .tab-inactive { background-color: #1e293b; color: #94a3b8; border-color: #374151; }
-    </style>
-</head>
-<body class="min-h-screen flex flex-col items-center justify-start pt-4 pb-6 px-4 overflow-x-hidden">
 
-    <div class="fixed top-4 left-4 z-50 flex gap-2 opacity-50 hover:opacity-100 transition-opacity">
-        <button id="btn-export" class="w-8 h-8 bg-slate-800 rounded-full border border-slate-600 text-blue-400 flex items-center justify-center"><i class="fas fa-file-export text-xs"></i></button>
-        <button id="btn-import" class="w-8 h-8 bg-slate-800 rounded-full border border-slate-600 text-purple-400 flex items-center justify-center"><i class="fas fa-file-import text-xs"></i></button>
-        <input type="file" id="file-import" class="hidden" accept=".json">
-    </div>
+        function loadData() {
+            const storedPersonal = localStorage.getItem('my_flashcards');
+            const personalData = storedPersonal ? JSON.parse(storedPersonal) : [];
+            
+            const storedMastered = localStorage.getItem('my_mastered_list');
+            const masteredList = storedMastered ? JSON.parse(storedMastered) : [];
 
-    <button id="btn-add-modal" class="fixed bottom-8 right-6 w-14 h-14 bg-green-600 hover:bg-green-500 rounded-full text-white shadow-2xl shadow-green-900/50 z-50 flex items-center justify-center transition-transform active:scale-90 border-2 border-green-400">
-        <i class="fas fa-plus text-2xl"></i>
-    </button>
+            // Gộp tất cả
+            const allData = [...personalData, ...defaultData];
 
-    <div id="add-modal" class="hidden fixed inset-0 bg-black/90 z-[60] flex items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-slate-800 rounded-2xl w-full max-w-sm p-6 border border-slate-700 shadow-2xl relative">
-            <h3 class="text-xl font-bold text-white mb-4 text-center">Thêm Thẻ Mới</h3>
-            <div class="space-y-4">
-                <input id="input-en" type="text" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white focus:border-blue-500 outline-none" placeholder="Tiếng Anh (VD: Hello)">
-                <input id="input-vi" type="text" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white focus:border-blue-500 outline-none" placeholder="Tiếng Việt (VD: Xin chào)">
-            </div>
-            <div class="flex gap-3 mt-6">
-                <button id="btn-cancel" class="flex-1 py-3 bg-slate-700 hover:bg-slate-600 rounded-xl text-slate-300 font-bold">Hủy</button>
-                <button id="btn-save" class="flex-1 py-3 bg-blue-600 hover:bg-blue-500 rounded-xl text-white font-bold shadow-lg flex justify-center items-center gap-2">
-                    <span>Lưu</span> <i id="spinner" class="fas fa-spinner fa-spin hidden"></i>
-                </button>
-            </div>
-        </div>
-    </div>
+            // Đếm số lượng
+            const masteredCount = allData.filter(item => masteredList.includes(item.en)).length;
+            const learningCount = allData.length - masteredCount;
 
-    <div class="w-full max-w-md flex flex-col gap-4 h-full z-10">
-        
-        <div class="space-y-3">
-            <div class="flex justify-between items-end px-1">
-                <h1 class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">My <span class="text-white">Flashcards</span></h1>
-                <div id="index-display" class="text-xs font-mono text-slate-400 bg-slate-800/50 px-2 py-1 rounded border border-slate-700">0/0</div>
-            </div>
-            <div class="flex p-1 bg-slate-800/80 backdrop-blur rounded-xl border border-slate-700">
-                <button id="tab-learning" class="flex-1 py-2 rounded-lg text-sm font-bold transition-all tab-active">Đang học <span id="count-learning" class="opacity-70 text-xs">...</span></button>
-                <button id="tab-mastered" class="flex-1 py-2 rounded-lg text-sm font-bold transition-all tab-inactive">Đã thuộc <span id="count-mastered" class="opacity-70 text-xs">...</span></button>
-            </div>
-        </div>
+            document.getElementById('count-learning').textContent = `(${learningCount})`;
+            document.getElementById('count-mastered').textContent = `(${masteredCount})`;
 
-        <div class="space-y-2">
-            <div class="relative">
-                <i class="fas fa-search absolute left-4 top-3.5 text-slate-500"></i>
-                <input id="search-input" type="text" placeholder="Tìm kiếm..." class="w-full bg-slate-800/80 border border-slate-700 rounded-xl py-3 pl-10 pr-4 text-white focus:border-blue-500 outline-none transition" />
-            </div>
-            <div class="flex justify-between px-1">
-                <button id="btn-toggle-master" class="flex items-center gap-2 px-4 py-2 rounded-full bg-slate-800 border border-slate-700 text-slate-300 hover:border-green-500 hover:text-green-400 transition active:scale-95 text-xs font-bold uppercase tracking-wide">
-                    <i id="icon-master" class="far fa-check-circle text-lg"></i> <span id="text-master">Đã thuộc?</span>
-                </button>
-                <button id="btn-delete" class="w-9 h-9 flex items-center justify-center rounded-full bg-slate-800 border border-slate-700 text-slate-400 hover:text-red-500 hover:border-red-500 hover:bg-red-500/10 transition active:scale-95">
-                    <i class="fas fa-trash-alt"></i>
-                </button>
-            </div>
-        </div>
+            // Lọc theo chế độ
+            let resultData = [];
+            if (currentMode === 'learning') {
+                resultData = allData.filter(item => !masteredList.includes(item.en));
+            } else {
+                resultData = allData.filter(item => masteredList.includes(item.en));
+            }
 
-        <div id="flashcard-area" class="relative w-full h-80 cursor-pointer perspective-1000 group mt-2">
-            <div id="card-inner" class="relative w-full h-full duration-500 transform-style-3d card-container">
+            return shuffleArray(resultData);
+        }
+
+        // Init Data
+        let fullData = loadData(); 
+        let filteredData = [...fullData];
+        let currentIndex = 0;
+        let isFlipped = false;
+
+        // --- DOM ELEMENTS ---
+        const els = {
+            cardInner: document.getElementById('card-inner'),
+            frontText: document.getElementById('card-front-text'),
+            backVi: document.getElementById('card-back-vi'),
+            backIpa: document.getElementById('card-back-ipa'),
+            backEn: document.getElementById('card-back-en'),
+            counter: document.getElementById('counter-text'),
+            indexDisplay: document.getElementById('index-display'),
+            searchInput: document.getElementById('search-input'),
+            btnPrev: document.getElementById('btn-prev'),
+            btnNext: document.getElementById('btn-next'),
+            btnSpeakFront: document.getElementById('btn-speak-front'),
+            btnSpeakBack: document.getElementById('btn-speak-back'),
+            flashcardArea: document.getElementById('flashcard-area'),
+            noResults: document.getElementById('no-results'),
+            addModal: document.getElementById('add-modal'),
+            btnAddModal: document.getElementById('btn-add-modal'),
+            btnCancel: document.getElementById('btn-cancel'),
+            btnSave: document.getElementById('btn-save'),
+            inputEn: document.getElementById('input-en'),
+            inputVi: document.getElementById('input-vi'),
+            spinner: document.getElementById('spinner'),
+            btnDelete: document.getElementById('btn-delete'),
+            btnExport: document.getElementById('btn-export'),
+            btnImport: document.getElementById('btn-import'),
+            fileImport: document.getElementById('file-import'),
+            tabLearning: document.getElementById('tab-learning'),
+            tabMastered: document.getElementById('tab-mastered'),
+            btnToggleMaster: document.getElementById('btn-toggle-master'),
+            iconMaster: document.getElementById('icon-master'),
+            textMaster: document.getElementById('text-master')
+        };
+
+        // --- RENDER ---
+        function renderCard() {
+            if (filteredData.length === 0) {
+                els.flashcardArea.style.display = 'none';
+                els.noResults.classList.remove('hidden');
+                els.noResults.textContent = currentMode === 'learning' ? "Đã thuộc hết rồi! Qua tab kia ôn tập đi." : "Chưa có từ nào đã thuộc.";
+                els.indexDisplay.textContent = "0 / 0";
+                return;
+            }
+
+            els.flashcardArea.style.display = 'block';
+            els.noResults.classList.add('hidden');
+
+            const card = filteredData[currentIndex];
+            els.frontText.textContent = card.en;
+            els.backVi.textContent = card.vi;
+            els.backIpa.textContent = card.ipa || "/.../"; 
+            els.backEn.textContent = card.en;
+
+            els.indexDisplay.textContent = `${currentIndex + 1} / ${filteredData.length}`;
+            
+            if (currentMode === 'learning') {
+                els.iconMaster.className = "far fa-check-circle text-lg";
+                els.textMaster.textContent = "Đã thuộc?";
+                els.btnToggleMaster.className = "absolute -top-10 left-0 w-auto px-3 h-8 text-gray-400 hover:text-green-400 transition z-50 flex items-center justify-center gap-2 font-bold text-sm bg-gray-800/50 rounded-full border border-gray-700";
+            } else {
+                els.iconMaster.className = "fas fa-times-circle text-lg";
+                els.textMaster.textContent = "Học lại";
+                els.btnToggleMaster.className = "absolute -top-10 left-0 w-auto px-3 h-8 text-gray-400 hover:text-yellow-400 transition z-50 flex items-center justify-center gap-2 font-bold text-sm bg-gray-800/50 rounded-full border border-gray-700";
+            }
+
+            els.btnPrev.disabled = filteredData.length <= 1;
+            els.btnNext.disabled = filteredData.length <= 1;
+            els.btnPrev.style.opacity = filteredData.length <= 1 ? "0.3" : "1";
+            els.btnNext.style.opacity = filteredData.length <= 1 ? "0.3" : "1";
+        }
+
+        function flipCard() {
+            isFlipped = !isFlipped;
+            els.cardInner.classList.toggle('card-flipped', isFlipped);
+        }
+
+        function nextCard() {
+            if (filteredData.length <= 1) return;
+            isFlipped = false;
+            els.cardInner.classList.remove('card-flipped');
+            setTimeout(() => {
+                currentIndex = (currentIndex + 1) % filteredData.length;
+                renderCard();
+            }, 150);
+        }
+
+        function prevCard() {
+            if (filteredData.length <= 1) return;
+            isFlipped = false;
+            els.cardInner.classList.remove('card-flipped');
+            setTimeout(() => {
+                currentIndex = (currentIndex - 1 + filteredData.length) % filteredData.length;
+                renderCard();
+            }, 150);
+        }
+
+        function speak(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'en-US';
+                utterance.rate = 0.9;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        // --- MODE SWITCHING ---
+        function setMode(mode) {
+            currentMode = mode;
+            
+            if (mode === 'learning') {
+                els.tabLearning.className = "flex-1 py-2 rounded-lg text-sm font-bold transition-all tab-active border shadow-sm";
+                els.tabMastered.className = "flex-1 py-2 rounded-lg text-sm font-bold transition-all tab-inactive border border-transparent hover:bg-gray-700";
+            } else {
+                els.tabLearning.className = "flex-1 py-2 rounded-lg text-sm font-bold transition-all tab-inactive border border-transparent hover:bg-gray-700";
+                els.tabMastered.className = "flex-1 py-2 rounded-lg text-sm font-bold transition-all tab-active border shadow-sm";
+            }
+
+            fullData = loadData();
+            filteredData = [...fullData];
+            currentIndex = 0;
+            isFlipped = false;
+            els.cardInner.classList.remove('card-flipped');
+            els.searchInput.value = ''; 
+            renderCard();
+        }
+
+        els.tabLearning.addEventListener('click', () => setMode('learning'));
+        els.tabMastered.addEventListener('click', () => setMode('mastered'));
+
+        // --- TOGGLE MASTERED ---
+        els.btnToggleMaster.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const currentCard = filteredData[currentIndex];
+            if (!currentCard) return;
+
+            const storedMastered = localStorage.getItem('my_mastered_list');
+            let masteredList = storedMastered ? JSON.parse(storedMastered) : [];
+
+            if (currentMode === 'learning') {
+                if (!masteredList.includes(currentCard.en)) {
+                    masteredList.push(currentCard.en);
+                    localStorage.setItem('my_mastered_list', JSON.stringify(masteredList));
+                    
+                    els.flashcardArea.classList.add('opacity-0', 'scale-95', 'transition-all');
+                    setTimeout(() => {
+                        fullData = loadData(); 
+                        filteredData = [...fullData];
+                        if (currentIndex >= filteredData.length) currentIndex = 0;
+                        renderCard();
+                        els.flashcardArea.classList.remove('opacity-0', 'scale-95');
+                    }, 300);
+                }
+            } else {
+                masteredList = masteredList.filter(word => word !== currentCard.en);
+                localStorage.setItem('my_mastered_list', JSON.stringify(masteredList));
                 
-                <div class="absolute inset-0 w-full h-full bg-slate-800 rounded-3xl shadow-xl border border-slate-700 backface-hidden overflow-hidden flex flex-col justify-center items-center p-6">
-                    <div class="absolute -top-10 -left-10 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl"></div>
-                    <span class="absolute top-5 left-6 text-[10px] font-bold text-blue-400 tracking-[0.2em] uppercase bg-blue-500/10 px-2 py-1 rounded">English</span>
-                    
-                    <div class="z-10 w-full flex flex-col items-center gap-6">
-                        <h2 id="card-front-text" class="text-4xl sm:text-5xl font-extrabold text-white text-center leading-tight break-words px-2 drop-shadow-lg">...</h2>
-                        <div class="flex flex-col items-center gap-2">
-                            <button id="btn-speak-front" class="w-14 h-14 rounded-full bg-blue-600 hover:bg-blue-500 flex items-center justify-center shadow-lg shadow-blue-900/50 active:scale-95 transition">
-                                <i class="fas fa-volume-high text-white text-xl"></i>
-                            </button>
-                            <p class="text-slate-500 text-[10px] uppercase tracking-widest flex items-center gap-2"><i class="fas fa-hand-pointer animate-bounce"></i> Chạm để lật</p>
-                        </div>
-                    </div>
-                </div>
+                els.flashcardArea.classList.add('opacity-0', 'scale-95', 'transition-all');
+                setTimeout(() => {
+                    fullData = loadData();
+                    filteredData = [...fullData];
+                    if (currentIndex >= filteredData.length) currentIndex = 0;
+                    renderCard();
+                    els.flashcardArea.classList.remove('opacity-0', 'scale-95');
+                }, 300);
+            }
+        });
 
-                <div class="absolute inset-0 w-full h-full bg-white rounded-3xl shadow-xl backface-hidden rotate-y-180 overflow-hidden flex flex-col justify-center items-center p-6">
-                    <span class="absolute top-5 left-6 text-[10px] font-bold text-slate-500 tracking-[0.2em] uppercase bg-slate-100 px-2 py-1 rounded">Meaning</span>
-                    
-                    <div class="z-10 w-full flex flex-col items-center gap-5">
-                        <h3 id="card-back-vi" class="text-3xl font-bold text-slate-900 text-center px-2">...</h3>
-                        
-                        <div class="px-4 py-2 bg-blue-50 rounded-lg border border-blue-100">
-                            <p id="card-back-ipa" class="text-xl text-blue-600 font-mono font-medium tracking-wide">...</p>
-                        </div>
-                        
-                        <div class="flex flex-col items-center gap-3 w-full border-t border-slate-100 pt-4 mt-2">
-                            <p id="card-back-en" class="text-xs text-slate-400 font-bold uppercase tracking-wider">...</p>
-                            <button id="btn-speak-back" class="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center active:scale-95 transition">
-                                <i class="fas fa-volume-high"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-
-        <div class="flex justify-between items-center px-4 pb-8">
-            <button id="btn-prev" class="w-14 h-14 rounded-full bg-slate-800 border border-slate-700 text-slate-400 hover:text-white hover:border-slate-500 hover:bg-slate-700 transition flex items-center justify-center active:scale-90 shadow-lg"><i class="fas fa-arrow-left text-xl"></i></button>
-            <div class="hidden sm:block text-xs text-slate-600 font-mono">← Swipe / Click →</div>
-            <button id="btn-next" class="w-14 h-14 rounded-full bg-slate-800 border border-slate-700 text-slate-400 hover:text-white hover:border-slate-500 hover:bg-slate-700 transition flex items-center justify-center active:scale-90 shadow-lg"><i class="fas fa-arrow-right text-xl"></i></button>
-        </div>
+        // --- MODAL & ADD ---
+        els.btnAddModal.addEventListener('click', () => {
+            els.addModal.classList.remove('hidden');
+            els.inputEn.focus();
+        });
         
-        <div id="no-results" class="hidden text-center text-slate-500 mt-10"><i class="fas fa-inbox text-4xl mb-2 opacity-50"></i><p>Trống trơn.</p></div>
-    </div>
+        els.btnCancel.addEventListener('click', () => {
+            els.addModal.classList.add('hidden');
+            els.inputEn.value = '';
+            els.inputVi.value = '';
+        });
+
+        async function fetchIPA(word) {
+            try {
+                const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
+                const data = await res.json();
+                if (Array.isArray(data) && data.length > 0) {
+                    return data[0].phonetic || (data[0].phonetics.find(p => p.text)?.text) || "";
+                }
+                return "";
+            } catch (err) { return ""; }
+        }
+
+        els.btnSave.addEventListener('click', async () => {
+            const en = els.inputEn.value.trim();
+            const vi = els.inputVi.value.trim();
+            if (!en || !vi) { alert("Thiếu thông tin!"); return; }
+
+            const stored = localStorage.getItem('my_flashcards');
+            const personalData = stored ? JSON.parse(stored) : [];
+            if (personalData.some(c => c.en.toLowerCase() === en.toLowerCase())) {
+                if(!confirm("Từ này bạn đã thêm rồi. Thêm nữa không?")) return;
+            }
+
+            els.btnSave.disabled = true;
+            els.spinner.classList.remove('hidden');
+
+            let ipa = await fetchIPA(en);
+            if (!ipa) ipa = "/.../"; 
+
+            const newCard = { en, vi, ipa };
+            personalData.unshift(newCard); 
+            localStorage.setItem('my_flashcards', JSON.stringify(personalData));
+
+            if (currentMode !== 'learning') setMode('learning');
+            else {
+                fullData = loadData();
+                filteredData = [...fullData];
+                const newIndex = filteredData.findIndex(item => item.en === en);
+                currentIndex = newIndex !== -1 ? newIndex : 0;
+                renderCard();
+            }
+
+            els.inputEn.value = ''; els.inputVi.value = '';
+            els.addModal.classList.add('hidden');
+            els.btnSave.disabled = false;
+            els.spinner.classList.add('hidden');
+        });
+
+        // --- DELETE ---
+        els.btnDelete.addEventListener('click', (e) => {
+            e.stopPropagation(); 
+            const currentCard = filteredData[currentIndex];
+            const stored = localStorage.getItem('my_flashcards');
+            let personalData = stored ? JSON.parse(stored) : [];
+            const indexToDelete = personalData.findIndex(item => item.en === currentCard.en && item.vi === currentCard.vi);
+
+            if (indexToDelete !== -1) {
+                if (confirm(`Xóa vĩnh viễn "${currentCard.en}"?`)) {
+                    personalData.splice(indexToDelete, 1);
+                    localStorage.setItem('my_flashcards', JSON.stringify(personalData));
+                    
+                    const storedMastered = localStorage.getItem('my_mastered_list');
+                    let masteredList = storedMastered ? JSON.parse(storedMastered) : [];
+                    if (masteredList.includes(currentCard.en)) {
+                        masteredList = masteredList.filter(w => w !== currentCard.en);
+                        localStorage.setItem('my_mastered_list', JSON.stringify(masteredList));
+                    }
+
+                    fullData = loadData();
+                    filteredData = [...fullData];
+                    
+                    if (els.searchInput.value) {
+                         const term = els.searchInput.value.toLowerCase().trim();
+                         filteredData = fullData.filter(item => item.en.toLowerCase().includes(term) || item.vi.toLowerCase().includes(term));
+                    }
+                    
+                    if (currentIndex >= filteredData.length) currentIndex = Math.max(0, filteredData.length - 1);
+                    renderCard();
+                }
+            } else {
+                alert("Không thể xóa thẻ mặc định!");
+            }
+        });
+
+        // --- IMPORT/EXPORT ---
+        els.btnExport.addEventListener('click', () => {
+            const personal = localStorage.getItem('my_flashcards') || "[]";
+            const mastered = localStorage.getItem('my_mastered_list') || "[]";
+            const exportData = { cards: JSON.parse(personal), mastered: JSON.parse(mastered) };
+            const dataStr = JSON.stringify(exportData);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', 'mesbox_backup.json');
+            linkElement.click();
+        });
+
+        els.btnImport.addEventListener('click', () => els.fileImport.click());
+        els.fileImport.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const imported = JSON.parse(event.target.result);
+                    let newCards = [];
+                    let newMastered = [];
+
+                    if (Array.isArray(imported)) {
+                        newCards = imported; 
+                    } else if (imported.cards) {
+                        newCards = imported.cards;
+                        newMastered = imported.mastered || [];
+                    }
+
+                    const storedCards = JSON.parse(localStorage.getItem('my_flashcards') || "[]");
+                    let countAdded = 0;
+                    newCards.forEach(c => {
+                        if (!storedCards.some(old => old.en.toLowerCase() === c.en.toLowerCase())) {
+                            storedCards.unshift(c);
+                            countAdded++;
+                        }
+                    });
+                    localStorage.setItem('my_flashcards', JSON.stringify(storedCards));
+
+                    const storedMastered = JSON.parse(localStorage.getItem('my_mastered_list') || "[]");
+                    newMastered.forEach(m => {
+                        if (!storedMastered.includes(m)) storedMastered.push(m);
+                    });
+                    localStorage.setItem('my_mastered_list', JSON.stringify(storedMastered));
+
+                    fullData = loadData();
+                    filteredData = [...fullData];
+                    renderCard();
+                    alert(`Đã nhập: ${countAdded} từ mới.`);
+                } catch (err) { alert("File lỗi!"); }
+            };
+            reader.readAsText(file);
+            e.target.value = '';
+        });
+
+        // --- SEARCH, SWIPE, KEYBOARD ---
+        els.searchInput.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase().trim();
+            filteredData = fullData.filter(item => 
+                item.en.toLowerCase().includes(term) || 
+                item.vi.toLowerCase().includes(term)
+            );
+            currentIndex = 0;
+            isFlipped = false;
+            els.cardInner.classList.remove('card-flipped');
+            renderCard();
+        });
+
+        els.flashcardArea.addEventListener('click', flipCard);
+        els.btnNext.addEventListener('click', nextCard);
+        els.btnPrev.addEventListener('click', prevCard);
+        els.btnSpeakFront.addEventListener('click', (e) => { e.stopPropagation(); speak(filteredData[currentIndex].en); });
+        els.btnSpeakBack.addEventListener('click', (e) => { e.stopPropagation(); speak(filteredData[currentIndex].en); });
+
+        let touchStartX = 0; let touchStartY = 0; const minSwipeDistance = 50;
+        document.addEventListener('touchstart', (e) => {
+            if (e.target.closest('#add-modal')) return;
+            touchStartX = e.changedTouches[0].screenX; touchStartY = e.changedTouches[0].screenY;
+        }, { passive: true });
+        document.addEventListener('touchend', (e) => {
+            if (e.target.closest('#add-modal')) return;
+            const dX = touchStartX - e.changedTouches[0].screenX;
+            const dY = touchStartY - e.changedTouches[0].screenY;
+            if (Math.abs(dX) > Math.abs(dY) && Math.abs(dX) > minSwipeDistance) dX > 0 ? nextCard() : prevCard();
+        }, { passive: true });
+        window.addEventListener('keydown', (e) => {
+            if (document.activeElement === els.searchInput || !els.addModal.classList.contains('hidden')) return;
+            if (e.key === 'ArrowRight') nextCard();
+            if (e.key === 'ArrowLeft') prevCard();
+            if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); flipCard(); }
+        });
+
+        // Init PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
+        }
+
+        renderCard();
+    </script>
+</body>
+</html>
