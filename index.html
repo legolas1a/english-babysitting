@@ -2,40 +2,53 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Flashcards Pro</title> 
-    <link rel="icon" type="image/png" href="https://lh3.googleusercontent.com/a/ACg8ocLm2zmxrsiuv3p344IkTBYO35_JmBkGlnUHW5wfOU9thQ07tSFz=s360-c-no">
-<link rel="shortcut icon" type="image/png" href="https://lh3.googleusercontent.com/a/ACg8ocLm2zmxrsiuv3p344IkTBYO35_JmBkGlnUHW5wfOU9thQ07tSFz=s360-c-no">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#111827">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3405/3405802.png">
 
     <style>
         body {
-            background-color: #0f172a;
-            color: #e2e8f0;
+            background-color: #111827;
+            color: #e5e5e5;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            -webkit-tap-highlight-color: transparent;
-            overscroll-behavior-y: none; /* Chống kéo nảy trang trên iOS */
         }
         .perspective-1000 { perspective: 1000px; }
         .transform-style-3d { transform-style: preserve-3d; }
         .backface-hidden { backface-visibility: hidden; }
         .rotate-y-180 { transform: rotateY(180deg); }
-        .card-container { transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .card-container { transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
         .card-flipped { transform: rotateY(180deg); }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #1f2937; }
+        ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
         
-        .tab-active { background-color: #3b82f6; color: white; border-color: #3b82f6; }
-        .tab-inactive { background-color: #1e293b; color: #94a3b8; border-color: #374151; }
+        /* Hiệu ứng Active cho Tab */
+        .tab-active {
+            background-color: #2563eb;
+            color: white;
+            border-color: #3b82f6;
+        }
+        .tab-inactive {
+            background-color: #1f2937;
+            color: #9ca3af;
+            border-color: #374151;
+        }
     </style>
 </head>
-<body class="min-h-screen flex flex-col items-center justify-start pt-4 pb-6 px-4">
+<body class="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-900 overflow-hidden relative">
 
-    <div class="fixed top-3 left-3 z-50 flex gap-2 opacity-30 hover:opacity-100 transition-opacity">
-        <button id="btn-export" class="w-8 h-8 bg-slate-800 rounded-full border border-slate-600 text-blue-400 flex items-center justify-center"><i class="fas fa-file-export text-xs"></i></button>
-        <button id="btn-import" class="w-8 h-8 bg-slate-800 rounded-full border border-slate-600 text-purple-400 flex items-center justify-center"><i class="fas fa-file-import text-xs"></i></button>
+    <div class="fixed top-4 left-4 z-50 flex gap-2">
+        <button id="btn-export" class="w-10 h-10 bg-blue-900/50 hover:bg-blue-700 border border-blue-700 rounded-full text-blue-200 shadow-lg flex items-center justify-center transition active:scale-95" title="Xuất dữ liệu (Backup)">
+            <i class="fas fa-file-export"></i>
+        </button>
+        <button id="btn-import" class="w-10 h-10 bg-purple-900/50 hover:bg-purple-700 border border-purple-700 rounded-full text-purple-200 shadow-lg flex items-center justify-center transition active:scale-95" title="Nhập dữ liệu (Restore)">
+            <i class="fas fa-file-import"></i>
+        </button>
         <input type="file" id="file-import" class="hidden" accept=".json">
     </div>
 
@@ -43,515 +56,437 @@
         <i class="fas fa-plus text-2xl"></i>
     </button>
 
-    <div id="add-modal" class="hidden fixed inset-0 bg-black/90 z-[60] flex items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-slate-800 rounded-2xl w-full max-w-sm p-6 border border-slate-700 shadow-2xl relative">
-            <h3 class="text-xl font-bold text-white mb-4 text-center">Thêm Thẻ Mới</h3>
-            <div class="space-y-4">
-                <input id="input-en" type="text" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white focus:border-blue-500 outline-none" placeholder="English (VD: Apple)">
-                <input id="input-vi" type="text" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white focus:border-blue-500 outline-none" placeholder="Tiếng Việt (VD: Quả táo)">
+    <div id="add-modal" class="hidden fixed inset-0 bg-black/80 z-[60] flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-gray-800 rounded-2xl w-full max-w-sm p-6 border border-gray-700 shadow-2xl relative">
+            <h3 class="text-xl font-bold text-white mb-4">Thêm Flashcard mới</h3>
+            <div class="mb-4">
+                <label class="block text-gray-400 text-sm mb-1">Tiếng Anh (Word)</label>
+                <input id="input-en" type="text" class="w-full bg-gray-900 border border-gray-600 rounded-lg p-3 text-white focus:border-green-500 outline-none" placeholder="Ví dụ: apple">
             </div>
-            <div class="flex gap-3 mt-6">
-                <button id="btn-cancel" class="flex-1 py-3 bg-slate-700 rounded-xl text-slate-300 font-bold">Hủy</button>
-                <button id="btn-save" class="flex-1 py-3 bg-blue-600 rounded-xl text-white font-bold flex justify-center items-center gap-2">
-                    <span>Lưu</span> <i id="spinner" class="fas fa-spinner fa-spin hidden"></i>
+            <div class="mb-6">
+                <label class="block text-gray-400 text-sm mb-1">Nghĩa Tiếng Việt</label>
+                <input id="input-vi" type="text" class="w-full bg-gray-900 border border-gray-600 rounded-lg p-3 text-white focus:border-green-500 outline-none" placeholder="Ví dụ: quả táo">
+            </div>
+            <div class="flex gap-3">
+                <button id="btn-cancel" class="flex-1 py-3 bg-gray-700 hover:bg-gray-600 rounded-lg text-gray-300 font-medium">Hủy</button>
+                <button id="btn-save" class="flex-1 py-3 bg-green-600 hover:bg-green-500 rounded-lg text-white font-bold shadow-lg flex justify-center items-center gap-2">
+                    <span>Lưu</span>
+                    <i id="spinner" class="fas fa-spinner fa-spin hidden"></i>
                 </button>
             </div>
         </div>
     </div>
 
-    <div class="w-full max-w-md flex flex-col gap-3 h-full z-10">
+    <div class="w-full max-w-md mb-4 z-10 flex flex-col gap-4">
         
         <div class="flex justify-between items-end px-1">
-            <h1 class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">My <span class="text-white">Flashcards</span></h1>
-            <div id="index-display" class="text-xs font-mono text-slate-400 bg-slate-800 px-2 py-1 rounded border border-slate-700">0/0</div>
-        </div>
-
-        <div class="flex p-1 bg-slate-800/80 rounded-xl border border-slate-700">
-            <button id="tab-learning" class="flex-1 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all tab-active">Đang học <span id="count-learning" class="opacity-70">...</span></button>
-            <button id="tab-mastered" class="flex-1 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all tab-inactive">Đã thuộc <span id="count-mastered" class="opacity-70">...</span></button>
-        </div>
-
-        <div class="relative">
-            <i class="fas fa-search absolute left-4 top-3.5 text-slate-500"></i>
-            <input id="search-input" type="text" placeholder="Tìm kiếm..." class="w-full bg-slate-800/80 border border-slate-700 rounded-xl py-3 pl-10 pr-4 text-sm text-white focus:border-blue-500 outline-none" />
-        </div>
-
-        <div class="flex justify-between items-center px-1 h-10">
-            <button id="btn-toggle-master" class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300 hover:border-green-500 hover:text-green-400 transition active:scale-95">
-                <i id="icon-master" class="far fa-check-circle text-base"></i> 
-                <span id="text-master" class="text-[10px] font-bold uppercase tracking-wider">Đã thuộc?</span>
-            </button>
-
-            <button id="btn-delete" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-800 border border-slate-700 text-slate-400 hover:text-red-500 hover:border-red-500 transition active:scale-95">
-                <i class="fas fa-trash-alt text-sm"></i>
-            </button>
-        </div>
-
-        <div id="flashcard-area" class="relative w-full h-80 sm:h-96 cursor-pointer perspective-1000 group mt-1">
-            <div id="card-inner" class="relative w-full h-full duration-500 transform-style-3d card-container">
-                
-                <div class="absolute inset-0 w-full h-full bg-slate-800 rounded-3xl shadow-xl border border-slate-700 backface-hidden overflow-hidden">
-                    <span class="absolute top-4 left-4 z-20 text-[10px] font-bold text-blue-400 tracking-widest uppercase bg-blue-500/10 px-2 py-1 rounded">English</span>
-                    
-                    <div class="absolute inset-0 flex items-center justify-center px-4 z-10">
-                        <h2 id="card-front-text" class="text-4xl font-extrabold text-white text-center leading-tight break-words max-w-full drop-shadow-lg pb-10">...</h2>
-                    </div>
-
-                    <div class="absolute bottom-4 left-0 w-full flex flex-col items-center gap-2 z-20">
-                        <button id="btn-speak-front" class="w-12 h-12 rounded-full bg-blue-600 hover:bg-blue-500 flex items-center justify-center shadow-lg active:scale-95 transition">
-                            <i class="fas fa-volume-high text-white text-lg"></i>
-                        </button>
-                        <p class="text-slate-500 text-[10px] uppercase tracking-widest"><i class="fas fa-hand-pointer animate-bounce mr-1"></i> Tap to flip</p>
-                    </div>
-                </div>
-
-                <div class="absolute inset-0 w-full h-full bg-white rounded-3xl shadow-xl backface-hidden rotate-y-180 overflow-hidden">
-                    <span class="absolute top-4 left-4 z-20 text-[10px] font-bold text-slate-500 tracking-widest uppercase bg-slate-100 px-2 py-1 rounded">Meaning</span>
-                    
-                    <div class="absolute inset-0 flex flex-col items-center justify-center px-4 z-10 pb-12">
-                        <h3 id="card-back-vi" class="text-3xl font-bold text-slate-800 text-center mb-3">...</h3>
-                        <div class="px-3 py-1 bg-blue-50 rounded border border-blue-100 mb-4">
-                            <p id="card-back-ipa" class="text-lg text-blue-600 font-mono font-medium">...</p>
-                        </div>
-                    </div>
-
-                    <div class="absolute bottom-0 left-0 w-full border-t border-slate-100 py-3 bg-slate-50/50 flex flex-col items-center gap-2 z-20">
-                        <p id="card-back-en" class="text-xs text-slate-400 font-bold uppercase tracking-wider">...</p>
-                        <button id="btn-speak-back" class="w-10 h-10 rounded-full bg-white border border-slate-200 text-slate-600 flex items-center justify-center shadow-sm active:scale-95">
-                            <i class="fas fa-volume-high"></i>
-                        </button>
-                    </div>
-                </div>
-
+            <div>
+                <h1 class="text-2xl font-bold text-blue-400 tracking-tight">My <span class="text-white">Flashcards</span></h1>
+                <p id="mode-label" class="text-xs text-green-400 font-bold uppercase tracking-widest mt-1">Đang học</p>
+            </div>
+            <div id="index-display" class="text-right text-sm font-mono text-gray-300 bg-gray-800 px-3 py-1 rounded-full border border-gray-700">
+                0 / 0
             </div>
         </div>
 
-        <div class="flex justify-between items-center px-6 pb-8 mt-2">
-            <button id="btn-prev" class="w-12 h-12 rounded-full bg-slate-800 border border-slate-700 text-slate-400 active:scale-90 shadow-lg flex items-center justify-center"><i class="fas fa-arrow-left"></i></button>
-            <span class="text-[10px] text-slate-600 uppercase font-bold tracking-widest">Swipe</span>
-            <button id="btn-next" class="w-12 h-12 rounded-full bg-slate-800 border border-slate-700 text-slate-400 active:scale-90 shadow-lg flex items-center justify-center"><i class="fas fa-arrow-right"></i></button>
+        <div class="flex p-1 bg-gray-800 rounded-xl border border-gray-700">
+            <button id="tab-learning" class="flex-1 py-2 rounded-lg text-sm font-bold transition-all tab-active border shadow-sm">
+                Đang học <span id="count-learning" class="ml-1 text-xs opacity-70">(0)</span>
+            </button>
+            <button id="tab-mastered" class="flex-1 py-2 rounded-lg text-sm font-bold transition-all tab-inactive border border-transparent hover:bg-gray-700">
+                Đã thuộc <span id="count-mastered" class="ml-1 text-xs opacity-70">(0)</span>
+            </button>
         </div>
+
+        <input id="search-input" type="text" placeholder="🔍 Tìm từ vựng..." class="p-3 w-full bg-gray-800 rounded-lg text-white border border-gray-700 focus:border-blue-500 outline-none transition duration-200" />
+    </div>
+
+    <div id="flashcard-area" class="relative w-full max-w-md h-80 cursor-pointer perspective-1000 group z-10">
         
-        <div id="no-results" class="hidden text-center text-slate-500 mt-10"><p>Trống.</p></div>
+        <button id="btn-delete" class="absolute -top-10 right-0 w-8 h-8 text-gray-500 hover:text-red-500 transition z-50 flex items-center justify-center" title="Xóa thẻ này">
+            <i class="fas fa-trash-alt text-lg"></i>
+        </button>
+
+        <button id="btn-toggle-master" class="absolute -top-10 left-0 w-auto px-3 h-8 text-gray-400 hover:text-green-400 transition z-50 flex items-center justify-center gap-2 font-bold text-sm bg-gray-800/50 rounded-full border border-gray-700" title="Đánh dấu trạng thái">
+            <i id="icon-master" class="far fa-check-circle text-lg"></i>
+            <span id="text-master">Đã thuộc?</span>
+        </button>
+
+        <div id="card-inner" class="relative w-full h-full duration-500 transform-style-3d card-container">
+            <div class="absolute w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl shadow-2xl border-2 border-blue-500/50 p-8 flex flex-col items-center justify-center backface-hidden">
+                <span class="absolute top-4 left-4 text-xs font-bold text-blue-400 tracking-widest bg-blue-500/10 px-2 py-1 rounded-md uppercase">English</span>
+                <div class="flex-1 flex items-center justify-center w-full">
+                    <h2 id="card-front-text" class="text-4xl md:text-5xl font-extrabold text-white text-center leading-tight break-words max-w-full">...</h2>
+                </div>
+                <button id="btn-speak-front" class="mt-4 w-12 h-12 rounded-full bg-blue-600 hover:bg-blue-500 flex items-center justify-center transition-all shadow-xl hover:shadow-blue-500/50 active:scale-95">
+                    <i class="fas fa-volume-high text-white text-lg"></i>
+                </button>
+                <p class="mt-4 text-gray-500 text-xs flex items-center gap-2">
+                    <i class="fas fa-hand-pointer"></i> Tap to Flip
+                </p>
+            </div>
+            <div class="absolute w-full h-full bg-white rounded-2xl shadow-2xl p-8 flex flex-col items-center justify-center backface-hidden rotate-y-180 border-2 border-gray-300">
+                <span class="absolute top-4 left-4 text-xs font-bold text-gray-600 tracking-widest uppercase border border-gray-300 px-2 py-1 rounded-md">Meaning</span>
+                <div class="flex-1 flex flex-col items-center justify-center w-full space-y-4">
+                    <h3 id="card-back-vi" class="text-3xl font-bold text-gray-900 text-center">...</h3>
+                    <div class="px-4 py-2 bg-blue-50 rounded-lg border border-blue-100 shadow-inner">
+                        <p id="card-back-ipa" class="text-xl text-blue-600 font-mono font-medium tracking-wide">...</p>
+                    </div>
+                    <p id="card-back-en" class="text-sm text-gray-400 font-semibold border-t border-gray-100 pt-2">...</p>
+                </div>
+                <button id="btn-speak-back" class="mb-2 w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 flex items-center justify-center transition-all">
+                    <i class="fas fa-volume-high"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="no-results" class="hidden text-center text-gray-400 text-xl mt-10 z-20">Danh sách trống.</div>
+
+    <div class="w-full max-w-md flex justify-between items-center mt-8 z-10 px-4">
+        <button id="btn-prev" class="w-14 h-14 rounded-full bg-gray-800 border border-gray-700 text-gray-300 hover:text-white hover:border-gray-500 hover:bg-blue-800 transition flex items-center justify-center active:scale-95 shadow-lg">
+            <i class="fas fa-arrow-left text-lg"></i>
+        </button>
+        <div class="text-xs text-gray-500 font-mono flex flex-col items-center">
+            <span>← Prev | Flip | Next →</span>
+        </div>
+        <button id="btn-next" class="w-14 h-14 rounded-full bg-gray-800 border border-gray-700 text-gray-300 hover:text-white hover:border-gray-500 hover:bg-blue-800 transition flex items-center justify-center active:scale-95 shadow-lg">
+            <i class="fas fa-arrow-right text-lg"></i>
+        </button>
     </div>
 
     <script>
-        // --- DATASET ---
+        // --- 1. DATA GỐC (DEFAULT) ---
         const defaultData = [
-{ en: "feeding", vi: "cho ăn", ipa: "/ˈfiːdɪŋ/" },
-{ en: "nursing", vi: "chăm sóc (mẹ/bé)", ipa: "/ˈnɜːrsɪŋ/" },
-{ en: "breastfeeding", vi: "cho bú mẹ", ipa: "/ˈbrɛstˌfiːdɪŋ/" },
-{ en: "burp", vi: "vỗ ợ", ipa: "/bɜːrp/" },
-{ en: "crib", vi: "cũi", ipa: "/krɪb/" },
-{ en: "pacifier", vi: "ti giả", ipa: "/ˈpæsɪfaɪər/" },
-{ en: "swaddle", vi: "quấn khăn", ipa: "/ˈswɑːdəl/" },
-{ en: "wipe", vi: "khăn ướt", ipa: "/waɪp/" },
-{ en: "nap", vi: "ngủ ngắn", ipa: "/næp/" },
-{ en: "lullaby", vi: "ru ngủ", ipa: "/ˈlʌləbaɪ/" },
-{ en: "cradle", vi: "cái nôi", ipa: "/ˈkreɪdəl/" },
-{ en: "calm", vi: "trấn an", ipa: "/kɑːm/" },
-{ en: "cry", vi: "khóc", ipa: "/kraɪ/" },
-{ en: "smile", vi: "cười", ipa: "/smaɪl/" },
-{ en: "sneeze", vi: "hắt hơi", ipa: "/sniːz/" },
-{ en: "cough", vi: "ho", ipa: "/kɔːf/" },
-{ en: "fever", vi: "sốt", ipa: "/ˈfiːvər/" },
-{ en: "medicine", vi: "thuốc", ipa: "/ˈmɛdəsən/" },
-{ en: "doctor", vi: "bác sĩ", ipa: "/ˈdɑːktər/" },
-{ en: "midwife", vi: "nữ hộ sinh", ipa: "/ˈmɪdˌwaɪf/" },
-{ en: "clinic", vi: "phòng khám", ipa: "/ˈklɪnɪk/" },
-{ en: "appointment", vi: "lịch hẹn", ipa: "/əˈpɔɪntmənt/" },
-{ en: "check-up", vi: "khám định kỳ", ipa: "/ˈtʃɛkˌʌp/" },
-{ en: "stroller walk", vi: "đẩy xe đi dạo", ipa: "/ˈstroʊlər wɔːk/" },
-{ en: "fresh air", vi: "không khí trong lành", ipa: "/frɛʃ ɛr/" },
-{ en: "park", vi: "công viên", ipa: "/pɑːrk/" },
-{ en: "outside", vi: "bên ngoài", ipa: "/ˈaʊtsaɪd/" },
-{ en: "inside", vi: "bên trong", ipa: "/ɪnˈsaɪd/" },
-{ en: "grocery", vi: "cửa hàng thực phẩm", ipa: "/ˈɡroʊsəri/" },
-{ en: "supermarket", vi: "siêu thị", ipa: "/ˈsuːpərˌmɑːrkɪt/" },
-{ en: "shopping list", vi: "danh sách mua", ipa: "/ˈʃɑːpɪŋ lɪst/" },
-{ en: "detergent", vi: "nước giặt", ipa: "/dɪˈtɜːrdʒənt/" },
-{ en: "softener", vi: "nước xả", ipa: "/ˈsɔːfənər/" },
-{ en: "laundry", vi: "giặt giũ", ipa: "/ˈlɔːndri/" },
-{ en: "dry", vi: "phơi, sấy", ipa: "/draɪ/" },
-{ en: "fold", vi: "gấp", ipa: "/foʊld/" },
-{ en: "iron", vi: "ủi", ipa: "/ˈaɪərn/" },
-{ en: "trash", vi: "rác", ipa: "/træʃ/" },
-{ en: "bin", vi: "thùng rác", ipa: "/bɪn/" },
-{ en: "wipe down", vi: "lau sạch", ipa: "/waɪp daʊn/" },
-{ en: "mop", vi: "lau sàn", ipa: "/mɑːp/" },
-{ en: "sweep", vi: "quét", ipa: "/swiːp/" },
-{ en: "tidy", vi: "ngăn nắp", ipa: "/ˈtaɪdi/" },
-{ en: "organize", vi: "sắp xếp", ipa: "/ˈɔːrɡənaɪz/" },
-{ en: "fridge", vi: "tủ lạnh", ipa: "/frɪdʒ/" },
-{ en: "freezer", vi: "ngăn đá", ipa: "/ˈfriːzər/" },
-{ en: "stove", vi: "bếp lò", ipa: "/stoʊv/" },
-{ en: "oven", vi: "lò nướng", ipa: "/ˈʌvən/" },
-{ en: "microwave", vi: "lò vi sóng", ipa: "/ˈmaɪkrəˌweɪv/" },
-{ en: "sink", vi: "bồn rửa", ipa: "/sɪŋk/" },
-{ en: "tap", vi: "vòi nước", ipa: "/tæp/" },
-{ en: "towel", vi: "khăn", ipa: "/ˈtaʊəl/" },
-{ en: "tissue", vi: "khăn giấy", ipa: "/ˈtɪʃuː/" },
-{ en: "blanket cover", vi: "vỏ chăn", ipa: "/ˈblæŋkɪt ˈkʌvər/" },
-{ en: "sheet", vi: "ga giường", ipa: "/ʃiːt/" },
-{ en: "mattress", vi: "nệm", ipa: "/ˈmætrəs/" },
-{ en: "heater", vi: "máy sưởi", ipa: "/ˈhiːtər/" },
-{ en: "shower", vi: "vòi tắm", ipa: "/ˈʃaʊər/" },
-{ en: "shampoo", vi: "dầu gội", ipa: "/ʃæmˈpuː/" },
-{ en: "soap", vi: "xà phòng", ipa: "/soʊp/" },
-{ en: "cream", vi: "kem", ipa: "/kriːm/" },
-{ en: "lotion", vi: "kem dưỡng", ipa: "/ˈloʊʃən/" },
-{ en: "sanitizer", vi: "dung dịch sát khuẩn", ipa: "/ˈsænɪtaɪzər/" },
-{ en: "allergy", vi: "dị ứng", ipa: "/ˈælərdʒi/" },
-{ en: "schedule", vi: "lịch", ipa: "/ˈskɛdʒuːl/" },
-{ en: "routine", vi: "thói quen hàng ngày", ipa: "/ruːˈtiːn/" },
-{ en: "quiet", vi: "yên tĩnh", ipa: "/ˈkwaɪət/" },
-{ en: "noise", vi: "tiếng ồn", ipa: "/nɔɪz/" },
-{ en: "gentle", vi: "nhẹ nhàng", ipa: "/ˈdʒɛntəl/" },
-{ en: "strong", vi: "mạnh", ipa: "/strɔːŋ/" },
-{ en: "careful", vi: "cẩn thận", ipa: "/ˈkɛrfəl/" },
-{ en: "support", vi: "đỡ, hỗ trợ", ipa: "/səˈpɔːrt/" },
-{ en: "lift", vi: "nâng", ipa: "/lɪft/" },
-{ en: "drop", vi: "làm rơi", ipa: "/drɑːp/" },
-{ en: "spill", vi: "làm đổ", ipa: "/spɪl/" },
-{ en: "warm up", vi: "hâm nóng", ipa: "/wɔːrm ʌp/" },
-{ en: "cool down", vi: "để nguội", ipa: "/kuːl daʊn/" },
-{ en: "measure", vi: "đo", ipa: "/ˈmɛʒər/" },
-{ en: "mix", vi: "trộn", ipa: "/mɪks/" },
-{ en: "shake", vi: "lắc", ipa: "/ʃeɪk/" },
-{ en: "check", vi: "kiểm tra", ipa: "/tʃɛk/" },
-{ en: "temperature", vi: "nhiệt độ", ipa: "/ˈtɛmprətʃər/" },
-{ en: "soft", vi: "mềm", ipa: "/sɔːft/" },
-{ en: "hard", vi: "cứng", ipa: "/hɑːrd/" },
-{ en: "heavy", vi: "nặng", ipa: "/ˈhɛvi/" },
-{ en: "light-weight", vi: "nhẹ", ipa: "/ˈlaɪt weɪt/" },
-{ en: "borrow", vi: "mượn", ipa: "/ˈbɑːroʊ/" },
-{ en: "return", vi: "trả", ipa: "/rɪˈtɜːrn/" },
-{ en: "visit", vi: "thăm", ipa: "/ˈvɪzɪt/" },
-{ en: "neighbor", vi: "hàng xóm", ipa: "/ˈneɪbər/" },
-{ en: "welcome", vi: "chào đón", ipa: "/ˈwɛlkəm/" },
-{ en: "stay", vi: "ở lại", ipa: "/steɪ/" },
-{ en: "leave", vi: "rời đi", ipa: "/liːv/" },
-{ en: "come", vi: "đến", ipa: "/kʌm/" },
-{ en: "go", vi: "đi", ipa: "/ɡoʊ/" },
-{ en: "bring back", vi: "mang về", ipa: "/brɪŋ bæk/" },
-{ en: "downstairs", vi: "tầng dưới", ipa: "/ˌdaʊnˈstɛərz/" },
-{ en: "upstairs", vi: "tầng trên", ipa: "/ˌʌpˈstɛərz/" },
-{ en: "hallway", vi: "hành lang", ipa: "/ˈhɔːlweɪ/" },
-{ en: "entrance", vi: "lối vào", ipa: "/ˈɛntrəns/" },
-{ en: "backyard", vi: "sân sau", ipa: "/ˈbækˌjɑːrd/" },
-{ en: "balcony", vi: "ban công", ipa: "/ˈbælkəni/" },
-{ en: "wardrobe", vi: "tủ quần áo", ipa: "/ˈwɔːrdroʊb/" },
-{ en: "drawer", vi: "ngăn kéo", ipa: "/drɔːr/" },
-{ en: "cupboard", vi: "tủ bếp", ipa: "/ˈkʌbərd/" },
-{ en: "kettle", vi: "ấm đun nước", ipa: "/ˈkɛtəl/" },
-{ en: "pot", vi: "nồi", ipa: "/pɒt/" },
-{ en: "pan", vi: "chảo", ipa: "/pæn/" },
-{ en: "lid", vi: "nắp", ipa: "/lɪd/" },
-{ en: "plate", vi: "đĩa", ipa: "/pleɪt/" },
-{ en: "bowl", vi: "tô", ipa: "/boʊl/" },
-{ en: "fork", vi: "nĩa", ipa: "/fɔːrk/" },
-{ en: "spoon", vi: "thìa", ipa: "/spuːn/" },
-{ en: "knife", vi: "dao", ipa: "/naɪf/" },
-{ en: "chop", vi: "chặt, thái", ipa: "/tʃɒp/" },
-{ en: "boil", vi: "luộc", ipa: "/bɔɪl/" },
-{ en: "steam", vi: "hấp", ipa: "/stiːm/" },
-{ en: "fry", vi: "chiên", ipa: "/fraɪ/" },
-{ en: "grill", vi: "nướng", ipa: "/ɡrɪl/" },
-{ en: "pour", vi: "rót", ipa: "/pɔːr/" },
-{ en: "stir", vi: "khuấy", ipa: "/stɜːr/" },
-{ en: "taste", vi: "nếm", ipa: "/teɪst/" },
-{ en: "salty", vi: "mặn", ipa: "/ˈsɔːlti/" },
-{ en: "sweet", vi: "ngọt", ipa: "/swiːt/" },
-{ en: "sour", vi: "chua", ipa: "/ˈsaʊər/" },
-{ en: "bitter", vi: "đắng", ipa: "/ˈbɪtər/" },
-{ en: "fresh", vi: "tươi", ipa: "/frɛʃ/" },
-{ en: "frozen", vi: "đông lạnh", ipa: "/ˈfroʊzən/" },
-{ en: "expired", vi: "hết hạn", ipa: "/ɪkˈspaɪərd/" },
-{ en: "prepare", vi: "chuẩn bị", ipa: "/prɪˈpɛər/" },
-{ en: "serve", vi: "dọn món", ipa: "/sɜːrv/" },
-{ en: "leftovers", vi: "đồ ăn thừa", ipa: "/ˈlɛftˌoʊvərz/" },
-{ en: "container", vi: "hộp đựng", ipa: "/kənˈteɪnər/" },
-{ en: "label", vi: "dán nhãn", ipa: "/ˈleɪbəl/" },
-{ en: "fridge door", vi: "cửa tủ lạnh", ipa: "/frɪdʒ dɔːr/" },
-{ en: "pantry", vi: "tủ đồ khô", ipa: "/ˈpæntri/" },
-{ en: "snack", vi: "đồ ăn nhẹ", ipa: "/snæk/" },
-{ en: "spices", vi: "gia vị", ipa: "/ˈspaɪsɪz/" },
-{ en: "garlic", vi: "tỏi", ipa: "/ˈɡɑːrlɪk/" },
-{ en: "ginger", vi: "gừng", ipa: "/ˈdʒɪndʒər/" },
-{ en: "onion", vi: "hành tây", ipa: "/ˈʌnjən/" },
-{ en: "carrot", vi: "cà rốt", ipa: "/ˈkærət/" },
-{ en: "potato", vi: "khoai tây", ipa: "/pəˈteɪtoʊ/" },
-{ en: "egg", vi: "trứng", ipa: "/ɛɡ/" },
-{ en: "rice", vi: "cơm", ipa: "/raɪs/" },
-{ en: "noodle", vi: "mì", ipa: "/ˈnuːdəl/" },
-{ en: "porridge", vi: "cháo", ipa: "/ˈpɔːrɪdʒ/" },
-{ en: "bath", vi: "tắm", ipa: "/bæθ/" },
-{ en: "bathtub", vi: "bồn tắm", ipa: "/ˈbæθˌtʌb/" },
-{ en: "warm water", vi: "nước ấm", ipa: "/wɔːrm ˈwɔːtər/" },
-{ en: "towel dry", vi: "lau khô", ipa: "/ˈtaʊəl draɪ/" },
-{ en: "brush", vi: "chải", ipa: "/brʌʃ/" },
-{ en: "comb", vi: "lược", ipa: "/koʊm/" },
-{ en: "hair dryer", vi: "máy sấy tóc", ipa: "/ˈhɛr ˌdraɪər/" },
-{ en: "pajamas", vi: "đồ ngủ", ipa: "/pəˈdʒæməz/" },
-{ en: "socks", vi: "vớ", ipa: "/sɑːks/" },
-{ en: "gloves", vi: "găng tay", ipa: "/ɡlʌvz/" },
-{ en: "hat", vi: "mũ", ipa: "/hæt/" },
-{ en: "jacket", vi: "áo khoác", ipa: "/ˈdʒækɪt/" },
-{ en: "blanket wrap", vi: "quấn chăn", ipa: "/ˈblæŋkɪt ræp/" },
-{ en: "protect", vi: "bảo vệ", ipa: "/prəˈtɛkt/" },
-{ en: "comfort", vi: "dỗ dành", ipa: "/ˈkʌmfərt/" },
-{ en: "cuddle", vi: "ôm nhẹ", ipa: "/ˈkʌdəl/" },
-{ en: "hold", vi: "bế", ipa: "/hoʊld/" },
-{ en: "lay down", vi: "đặt nằm", ipa: "/leɪ daʊn/" },
-{ en: "pick up", vi: "bế lên", ipa: "/pɪk ʌp/" },
-{ en: "bedtime", vi: "giờ ngủ", ipa: "/ˈbɛdtaɪm/" },
-{ en: "morning", vi: "buổi sáng", ipa: "/ˈmɔːrnɪŋ/" },
-{ en: "evening", vi: "buổi tối", ipa: "/ˈiːvnɪŋ/" },
-{ en: "midnight", vi: "nửa đêm", ipa: "/ˈmɪdnaɪt/" },
-{ en: "early", vi: "sớm", ipa: "/ˈɜːrli/" },
-{ en: "late", vi: "muộn", ipa: "/leɪt/" },
-{ en: "arrive", vi: "đến nơi", ipa: "/əˈraɪv/" },
-{ en: "depart", vi: "khởi hành", ipa: "/dɪˈpɑːrt/" },
-{ en: "boarding", vi: "lên máy bay", ipa: "/ˈbɔːrdɪŋ/" },
-{ en: "check-in", vi: "làm thủ tục", ipa: "/ˈtʃɛk ɪn/" },
-{ en: "passport", vi: "hộ chiếu", ipa: "/ˈpæspɔːrt/" },
-{ en: "luggage", vi: "hành lý", ipa: "/ˈlʌɡɪdʒ/" },
-{ en: "suitcase", vi: "vali", ipa: "/ˈsuːtkeɪs/" },
-{ en: "security check", vi: "kiểm tra an ninh", ipa: "/sɪˈkjʊərəti tʃɛk/" },
-{ en: "gate", vi: "cổng", ipa: "/ɡeɪt/" },
-{ en: "seat", vi: "ghế", ipa: "/siːt/" },
-{ en: "window seat", vi: "ghế gần cửa sổ", ipa: "/ˈwɪndoʊ siːt/" },
-{ en: "aisle seat", vi: "ghế lối đi", ipa: "/aɪl siːt/" },
-{ en: "flight attendant", vi: "tiếp viên", ipa: "/flaɪt əˈtɛndənt/" },
-{ en: "water please", vi: "cho tôi nước", ipa: "/ˈwɔːtər pliːz/" },
-{ en: "help me", vi: "giúp tôi", ipa: "/hɛlp miː/" },
-{ en: "understand", vi: "hiểu", ipa: "/ˌʌndərˈstænd/" },
-{ en: "repeat", vi: "nhắc lại", ipa: "/rɪˈpiːt/" },
-{ en: "slowly", vi: "chậm", ipa: "/ˈsloʊli/" },
-{ en: "thank you", vi: "cảm ơn", ipa: "/ˈθæŋk juː/" },
-{ en: "excuse me", vi: "xin lỗi/làm ơn", ipa: "/ɪkˈskjuːz miː/" },
-{ en: "shelf", vi: "kệ", ipa: "/ʃɛlf/" },
-{ en: "blanket", vi: "chăn", ipa: "/ˈblæŋ.kɪt/" },
-{ en: "pillow", vi: "gối", ipa: "/ˈpɪl.oʊ/" },
-{ en: "wet wipes", vi: "khăn ướt", ipa: "/wɛt waɪps/" },
-{ en: "bottle warmer", vi: "máy hâm bình sữa", ipa: "/ˈbɒt.əl ˈwɔːr.mər/" },
-{ en: "stroller", vi: "xe đẩy", ipa: "/ˈstroʊ.lər/" },
-{ en: "crib mattress", vi: "nệm cũi", ipa: "/krɪb ˈmæt.rəs/" },
-{ en: "babysitter", vi: "người trông trẻ", ipa: "/ˈbeɪ.biˌsɪt.ər/" },
-{ en: "laundry basket", vi: "giỏ đựng đồ giặt", ipa: "/ˈlɔːn.dri ˈbæs.kɪt/" },
-{ en: "rinse", vi: "xả", ipa: "/rɪns/" },
-{ en: "vacuum", vi: "hút bụi", ipa: "/ˈvæk.juːm/" },
-{ en: "sanitize", vi: "khử khuẩn", ipa: "/ˈsæn.ɪ.taɪz/" },
-{ en: "disinfect", vi: "khử trùng", ipa: "/ˌdɪs.ɪnˈfekt/" },
-{ en: "rash", vi: "phát ban", ipa: "/ræʃ/" },
-{ en: "ointment", vi: "thuốc mỡ", ipa: "/ˈɔɪnt.mənt/" },
-{ en: "fever patch", vi: "miếng hạ sốt", ipa: "/ˈfiː.vər pætʃ/" },
-{ en: "soothing", vi: "làm dịu", ipa: "/ˈsuː.ðɪŋ/" },
-{ en: "babymonitor", vi: "máy theo dõi trẻ", ipa: "/ˈbeɪ.biˌmɒn.ɪ.tər/" },
-{ en: "diaper cream", vi: "kem chống hăm", ipa: "/ˈdaɪ.pər kriːm/" },
-{ en: "pacifier clip", vi: "dây giữ ti giả", ipa: "/ˈpæs.ɪ.faɪ.ər klɪp/" },
-{ en: "bib", vi: "yếm", ipa: "/bɪb/" },
-{ en: "burp cloth", vi: "khăn vải cho bé ợ", ipa: "/bɜːrp klɒθ/" },
-{ en: "meal prep", vi: "chuẩn bị bữa ăn", ipa: "/ˈmiːl prep/" },
-{ en: "portion", vi: "khẩu phần", ipa: "/ˈpɔːr.ʃən/" },
-{ en: "simmer", vi: "ninh nhỏ lửa", ipa: "/ˈsɪm.ər/" },
-{ en: "blend", vi: "xay", ipa: "/blend/" },
-{ en: "puree", vi: "nghiền nhuyễn", ipa: "/pjʊˈreɪ/" },
-{ en: "frying pan", vi: "chảo", ipa: "/ˈfraɪ.ɪŋ pæn/" },
-{ en: "chopping board", vi: "thớt", ipa: "/ˈtʃɒp.ɪŋ bɔːrd/" },
-{ en: "apron", vi: "tạp dề", ipa: "/ˈeɪ.prən/" },
-{ en: "grocery list", vi: "danh sách mua đồ", ipa: "/ˈɡroʊ.sə.ri lɪst/" },
-{ en: "receipt", vi: "hóa đơn", ipa: "/rɪˈsiːt/" },
-{ en: "refill", vi: "bổ sung", ipa: "/ˈriː.fɪl/" },
-{ en: "sponge", vi: "miếng rửa", ipa: "/spʌndʒ/" },
-{ en: "trash bag", vi: "túi rác", ipa: "/træʃ bæɡ/" },
-{ en: "garbage bin", vi: "thùng rác", ipa: "/ˈɡɑːr.bɪdʒ bɪn/" },
-{ en: "recycle", vi: "tái chế", ipa: "/riːˈsaɪ.kəl/" },
-{ en: "insurance", vi: "bảo hiểm", ipa: "/ɪnˈʃʊr.əns/" },
-{ en: "pharmacy", vi: "hiệu thuốc", ipa: "/ˈfɑːr.mə.si/" },
-{ en: "traffic", vi: "giao thông", ipa: "/ˈtræf.ɪk/" },
-{ en: "roundabout", vi: "bùng binh", ipa: "/ˈraʊnd.ə.baʊt/" },
-{ en: "subway", vi: "tàu điện ngầm", ipa: "/ˈsʌb.weɪ/" },
-{ en: "platform", vi: "sân ga", ipa: "/ˈplæt.fɔːrm/" },
-{ en: "ticket machine", vi: "máy bán vé", ipa: "/ˈtɪk.ɪt məˌʃiːn/" },
-{ en: "fine", vi: "phạt", ipa: "/faɪn/" },
-{ en: "landlord", vi: "chủ nhà", ipa: "/ˈlænd.lɔːrd/" },
-{ en: "rent", vi: "tiền thuê nhà", ipa: "/rent/" },
-{ en: "radiator", vi: "lò sưởi nước", ipa: "/ˈreɪ.di.eɪ.tər/" },
-{ en: "curtain", vi: "rèm", ipa: "/ˈkɜːr.tən/" },
-{ en: "keychain", vi: "móc chìa khóa", ipa: "/ˈkiː.tʃeɪn/" },
-{ en: "mailbox", vi: "hộp thư", ipa: "/ˈmeɪl.bɒks/" },
-{ en: "delivery", vi: "giao hàng", ipa: "/dɪˈlɪv.ər.i/" },
-{ en: "signature", vi: "chữ ký", ipa: "/ˈsɪɡ.nə.tʃər/" },
-{ en: "friendly", vi: "thân thiện", ipa: "/ˈfrend.li/" },
-{ en: "polite", vi: "lịch sự", ipa: "/pəˈlaɪt/" },
-{ en: "quiet hours", vi: "giờ yên lặng", ipa: "/ˈkwaɪ.ət aʊərz/" },
-{ en: "recycling room", vi: "phòng phân loại rác", ipa: "/riːˈsaɪ.klɪŋ ruːm/" },
-{ en: "snow", vi: "tuyết", ipa: "/snoʊ/" },
-{ en: "slippery", vi: "trơn", ipa: "/ˈslɪp.ər.i/" },
-{ en: "boots", vi: "giày boots", ipa: "/buːts/" },
-{ en: "basement", vi: "tầng hầm", ipa: "/ˈbeɪs.mənt/" },
-{ en: "attic", vi: "gác mái", ipa: "/ˈæt.ɪk/" },
-{ en: "doorstep", vi: "bậc cửa", ipa: "/ˈdɔːr.step/" },
-{ en: "intercom", vi: "chuông liên lạc", ipa: "/ˈɪn.tər.kɒm/" },
-{ en: "security code", vi: "mã mở cửa", ipa: "/sɪˈkjʊr.ə.ti koʊd/" },
-{ en: "emergency", vi: "tình huống khẩn cấp", ipa: "/ɪˈmɜːr.dʒən.si/" },
-{ en: "ambulance", vi: "xe cứu thương", ipa: "/ˈæm.bjʊ.ləns/" },
-{ en: "fire alarm", vi: "báo cháy", ipa: "/ˈfaɪər əˌlɑːrm/" },
-{ en: "exit", vi: "lối ra", ipa: "/ˈeɡ.zɪt/" },
-{ en: "stairs", vi: "cầu thang", ipa: "/sterz/" },
-{ en: "elevator", vi: "thang máy", ipa: "/ˈel.ə.veɪ.tər/" },
-{ en: "railing", vi: "tay vịn", ipa: "/ˈreɪ.lɪŋ/" },
-{ en: "oven mitts", vi: "găng chống nóng", ipa: "/ˈʌv.ən mɪts/" },
-{ en: "pressure cooker", vi: "nồi áp suất", ipa: "/ˈpreʃ.ər ˈkʊk.ər/" },
-{ en: "ladle", vi: "muôi", ipa: "/ˈleɪ.dl/" },
-{ en: "spatula", vi: "cái xẻng lật", ipa: "/ˈspætʃ.ə.lə/" },
-{ en: "pot lid", vi: "nắp nồi", ipa: "/pɒt lɪd/" },
-{ en: "groceries", vi: "đồ tạp hóa", ipa: "/ˈɡroʊ.sər.iz/" },
-{ en: "butcher", vi: "cửa hàng thịt", ipa: "/ˈbʊtʃ.ər/" },
-{ en: "bakery", vi: "tiệm bánh", ipa: "/ˈbeɪ.kər.i/" },
-{ en: "dairy", vi: "đồ từ sữa", ipa: "/ˈder.i/" },
-{ en: "expiration date", vi: "hạn sử dụng", ipa: "/ˌek.spəˈreɪ.ʃən deɪt/" },
-{ en: "seasoning", vi: "gia vị", ipa: "/ˈsiː.zən.ɪŋ/" },
-{ en: "parsley", vi: "rau mùi tây", ipa: "/ˈpɑːr.sli/" },
-{ en: "mint", vi: "bạc hà", ipa: "/mɪnt/" },
-{ en: "cinnamon", vi: "quế", ipa: "/ˈsɪn.ə.mən/" },
-{ en: "napkin", vi: "khăn ăn", ipa: "/ˈnæp.kɪn/" },
-{ en: "dining table", vi: "bàn ăn", ipa: "/ˈdaɪ.nɪŋ ˌteɪ.bəl/" },
-{ en: "sofa", vi: "ghế sofa", ipa: "/ˈsoʊ.fə/" },
-{ en: "cushion", vi: "gối tựa", ipa: "/ˈkʊʃ.ən/" },
-{ en: "carpet", vi: "thảm", ipa: "/ˈkɑːr.pɪt/" },
-{ en: "wardrobe hanger", vi: "móc áo", ipa: "/ˈhæŋ.ər/" },
-{ en: "laundry detergent pod", vi: "viên giặt", ipa: "/ˈlɔːn.dri pɒd/" },
-{ en: "ironing board", vi: "bàn ủi", ipa: "/ˈaɪə.rɪŋ bɔːrd/" },
-{ en: "wrinkle", vi: "nhăn", ipa: "/ˈrɪŋ.kəl/" },
-{ en: "hang", vi: "treo", ipa: "/hæŋ/" },
-{ en: "grocery cart", vi: "xe đẩy siêu thị", ipa: "/ˈɡroʊ.sə.ri kɑːrt/" },
-{ en: "aisle", vi: "lối đi siêu thị", ipa: "/aɪl/" },
-{ en: "barcode", vi: "mã vạch", ipa: "/ˈbɑːr.koʊd/" },
-{ en: "refund", vi: "hoàn tiền", ipa: "/ˈriː.fʌnd/" },
-{ en: "exchange", vi: "đổi hàng", ipa: "/ɪksˈtʃeɪndʒ/" },
-{ en: "fitting room", vi: "phòng thử đồ", ipa: "/ˈfɪt.ɪŋ ruːm/" },
-{ en: "winter coat", vi: "áo khoác mùa đông", ipa: "/ˈwɪn.tər koʊt/" },
-{ en: "scarf", vi: "khăn choàng", ipa: "/skɑːrf/" },
-{ en: "thermal shirt", vi: "áo giữ nhiệt", ipa: "/ˈθɝː.məl ʃɜːrt/" },
-{ en: "indoor shoes", vi: "dép đi trong nhà", ipa: "/ˈɪn.dɔːr ʃuːz/" },
-{ en: "humidifier", vi: "máy tạo ẩm", ipa: "/hjuːˈmɪd.ə.faɪ.ər/" },
-{ en: "air purifier", vi: "máy lọc không khí", ipa: "/ˈer ˌpjʊr.ə.faɪ.ər/" },
-{ en: "thermostat", vi: "bộ điều nhiệt", ipa: "/ˈθɝː.mə.stæt/" },
-{ en: "fuse box", vi: "hộp cầu chì", ipa: "/fjuːz bɒks/" },
-{ en: "power outlet", vi: "ổ cắm", ipa: "/ˈpaʊ.ər ˌaʊt.lɪt/" },
-{ en: "charger", vi: "bộ sạc", ipa: "/ˈtʃɑːr.dʒər/" },
-{ en: "screen", vi: "màn hình", ipa: "/skriːn/" },
-{ en: "Wi-Fi password", vi: "mật khẩu Wi-Fi", ipa: "/ˈwaɪ.faɪ ˈpæs.wɜːrd/" },
-{ en: "connection", vi: "kết nối", ipa: "/kəˈnek.ʃən/" },
-{ en: "headset", vi: "tai nghe chụp", ipa: "/ˈhed.set/" },
-{ en: "voicemail", vi: "hộp thư thoại", ipa: "/ˈvɔɪs.meɪl/" },
-{ en: "ringtone", vi: "nhạc chuông", ipa: "/ˈrɪŋ.toʊn/" },
-{ en: "charging cable", vi: "dây sạc", ipa: "/ˈtʃɑːr.dʒɪŋ ˌkeɪ.bəl/" },
-{ en: "appointment letter", vi: "giấy hẹn", ipa: "/əˈpɔɪnt.mənt ˈlet.ər/" },
-{ en: "registration", vi: "đăng ký", ipa: "/ˌredʒ.ɪˈstreɪ.ʃən/" },
-{ en: "stroller ramp", vi: "đường dốc cho xe đẩy", ipa: "/ˈræmp/" },
-{ en: "baby carrier", vi: "địu em bé", ipa: "/ˈbeɪ.bi ˌkær.i.ər/" },
-{ en: "teething toy", vi: "đồ gặm nướu", ipa: "/ˈtiː.ðɪŋ tɔɪ/" },
-{ en: "newborn checkup", vi: "kiểm tra trẻ sơ sinh", ipa: "/ˈtʃek.ʌp/" },
-{ en: "pediatrician", vi: "bác sĩ nhi", ipa: "/ˌpiː.di.əˈtrɪʃ.ən/" },
-{ en: "symptoms", vi: "triệu chứng", ipa: "/ˈsɪmp.təmz/" },
-{ en: "appointment card", vi: "thẻ lịch hẹn", ipa: "/əˈpɔɪnt.mənt kɑːrd/" },
-{ en: "nursing bra", vi: "áo lót cho mẹ bỉm", ipa: "/ˈnɜː.sɪŋ brɑː/" },
-{ en: "pumping", vi: "hút sữa", ipa: "/ˈpʌmp.ɪŋ/" },
-{ en: "bedtime routine", vi: "thói quen trước khi ngủ", ipa: "/ˈbed.taɪm ruːˌtiːn/" },
-{ en: "better", vi: "tốt hơn", ipa: "/ˈbɛ.tɜ/" },
-{ en: "soothing light", vi: "đèn dịu", ipa: "/ˈsuː.ðɪŋ laɪt/" },
-{ en: "baby-proof", vi: "chống nguy hiểm cho bé", ipa: "/ˈbeɪ.bi pruːf/" },
-{ en: "cabinet lock", vi: "khóa tủ an toàn", ipa: "/ˈkæb.ɪ.nət lɒk/" },
-{ en: "corner guard", vi: "miếng ốp góc", ipa: "/ˈkɔːr.nər ɡɑːrd/" },
-{ en: "playmat", vi: "thảm chơi", ipa: "/ˈpleɪ.mæt/" },
-{ en: "storybook", vi: "sách truyện", ipa: "/ˈstɔːr.i.bʊk/" },
-{ en: "stroller cover", vi: "áo che xe đẩy", ipa: "/ˈkʌv.ər/" },
-{ en: "laundry net", vi: "túi giặt lưới", ipa: "/net/" },
-{ en: "detergent-free", vi: "không chất tẩy", ipa: "/dɪˈtɜː.dʒənt friː/" },
-{ en: "hello", vi: "xin chào", ipa: "/həˈloʊ/" },
-{ en: "good morning", vi: "chào buổi sáng", ipa: "/ɡʊd ˈmɔːrnɪŋ/" },
-{ en: "good evening", vi: "chào buổi tối", ipa: "/ɡʊd ˈiːvnɪŋ/" },
-{ en: "please", vi: "làm ơn", ipa: "/pliːz/" },
-{ en: "sorry", vi: "xin lỗi", ipa: "/ˈsɑːri/" },
-{ en: "yes", vi: "vâng", ipa: "/jɛs/" },
-{ en: "no", vi: "không", ipa: "/noʊ/" },
-{ en: "maybe", vi: "có thể", ipa: "/ˈmeɪbi/" },
-{ en: "daughter", vi: "con gái", ipa: "/ˈdɔːtər/" },
-{ en: "son-in-law", vi: "con rể", ipa: "/ˈsʌn ɪn lɔː/" },
-{ en: "baby", vi: "em bé", ipa: "/ˈbeɪbi/" },
-{ en: "newborn", vi: "trẻ sơ sinh", ipa: "/ˈnuːˌbɔːrn/" },
-{ en: "mother", vi: "mẹ", ipa: "/ˈmʌðər/" },
-{ en: "grandmother", vi: "bà", ipa: "/ˈɡrænˌmʌðər/" },
-{ en: "family", vi: "gia đình", ipa: "/ˈfæməli/" },
-{ en: "home", vi: "nhà", ipa: "/hoʊm/" },
-{ en: "room", vi: "phòng", ipa: "/ruːm/" },
-{ en: "kitchen", vi: "nhà bếp", ipa: "/ˈkɪtʃɪn/" },
-{ en: "bathroom", vi: "phòng tắm", ipa: "/ˈbæθruːm/" },
-{ en: "living room", vi: "phòng khách", ipa: "/ˈlɪvɪŋ ruːm/" },
-{ en: "bed", vi: "giường", ipa: "/bɛd/" },
-{ en: "clothes", vi: "quần áo", ipa: "/kloʊðz/" },
-{ en: "diaper", vi: "tã", ipa: "/ˈdaɪpər/" },
-{ en: "milk", vi: "sữa", ipa: "/mɪlk/" },
-{ en: "bottle", vi: "bình sữa", ipa: "/ˈbɑːtəl/" },
-{ en: "warm", vi: "ấm", ipa: "/wɔːrm/" },
-{ en: "cold", vi: "lạnh", ipa: "/koʊld/" },
-{ en: "hungry", vi: "đói", ipa: "/ˈhʌŋɡri/" },
-{ en: "sleepy", vi: "buồn ngủ", ipa: "/ˈsliːpi/" },
-{ en: "tired", vi: "mệt", ipa: "/ˈtaɪərd/" },
-{ en: "rest", vi: "nghỉ ngơi", ipa: "/rɛst/" },
-{ en: "carry", vi: "bế, mang", ipa: "/ˈkæri/" },
-{ en: "clean", vi: "dọn, sạch", ipa: "/kliːn/" },
-{ en: "wash", vi: "rửa", ipa: "/wɑːʃ/" },
-{ en: "cook", vi: "nấu ăn", ipa: "/kʊk/" },
-{ en: "vegetables", vi: "rau", ipa: "/ˈvɛdʒtəbəlz/" },
-{ en: "meat", vi: "thịt", ipa: "/miːt/" },
-{ en: "soup", vi: "súp", ipa: "/suːp/" },
-{ en: "tea", vi: "trà", ipa: "/tiː/" },
-{ en: "water", vi: "nước", ipa: "/ˈwɔːtər/" },
-{ en: "cup", vi: "cốc", ipa: "/kʌp/" },
-{ en: "table", vi: "bàn", ipa: "/ˈteɪbəl/" },
-{ en: "chair", vi: "ghế", ipa: "/tʃɛr/" },
-{ en: "floor", vi: "sàn nhà", ipa: "/flɔːr/" },
-{ en: "door", vi: "cửa", ipa: "/dɔːr/" },
-{ en: "window", vi: "cửa sổ", ipa: "/ˈwɪndoʊ/" },
-{ en: "light", vi: "đèn", ipa: "/laɪt/" },
-{ en: "dark", vi: "tối", ipa: "/dɑːrk/" },
-{ en: "afternoon", vi: "buổi chiều", ipa: "/ˌæftərˈnuːn/" },
-{ en: "night", vi: "ban đêm", ipa: "/naɪt/" },
-{ en: "today", vi: "hôm nay", ipa: "/təˈdeɪ/" },
-{ en: "tomorrow", vi: "ngày mai", ipa: "/təˈmɑːroʊ/" },
-{ en: "yesterday", vi: "hôm qua", ipa: "/ˈjɛstərdeɪ/" },
-{ en: "now", vi: "bây giờ", ipa: "/naʊ/" },
-{ en: "later", vi: "lát nữa", ipa: "/ˈleɪtər/" },
-{ en: "always", vi: "luôn luôn", ipa: "/ˈɔːlweɪz/" },
-{ en: "sometimes", vi: "thỉnh thoảng", ipa: "/ˈsʌmtaɪmz/" },
-{ en: "never", vi: "không bao giờ", ipa: "/ˈnɛvər/" },
-{ en: "need", vi: "cần", ipa: "/niːd/" },
-{ en: "want", vi: "muốn", ipa: "/wɑːnt/" },
-{ en: "like", vi: "thích", ipa: "/laɪk/" },
-{ en: "help", vi: "giúp", ipa: "/hɛlp/" },
-{ en: "bring", vi: "mang đến", ipa: "/brɪŋ/" },
-{ en: "give", vi: "đưa", ipa: "/ɡɪv/" },
-{ en: "take", vi: "lấy, mang đi", ipa: "/teɪk/" },
-{ en: "open", vi: "mở", ipa: "/ˈoʊpən/" },
-{ en: "close", vi: "đóng", ipa: "/kloʊz/" },
-{ en: "turn on", vi: "bật", ipa: "/tɜːrn ɑːn/" },
-{ en: "turn off", vi: "tắt", ipa: "/tɜːrn ɔːf/" },
-{ en: "hot", vi: "nóng", ipa: "/hɑːt/" },
-{ en: "cool", vi: "mát", ipa: "/kuːl/" },
-{ en: "dirty", vi: "bẩn", ipa: "/ˈdɜːrti/" },
-{ en: "safe", vi: "an toàn", ipa: "/seɪf/" },
-{ en: "slow", vi: "chậm", ipa: "/sloʊ/" },
-{ en: "fast", vi: "nhanh", ipa: "/fæst/" },
-{ en: "wait", vi: "đợi", ipa: "/weɪt/" },
-{ en: "listen", vi: "nghe", ipa: "/ˈlɪsən/" },
-{ en: "look", vi: "nhìn", ipa: "/lʊk/" },
-{ en: "watch", vi: "xem", ipa: "/wɑːtʃ/" },
+            { en: "feeding", vi: "cho ăn", ipa: "/ˈfiːdɪŋ/" },
+            { en: "nursing", vi: "chăm sóc mẹ/bé", ipa: "/ˈnɜːrsɪŋ/" },
+            { en: "breastfeeding", vi: "cho bú mẹ", ipa: "/ˈbrɛstˌfiːdɪŋ/" },
+            { en: "formula", vi: "sữa công thức", ipa: "/ˈfɔːrmjələ/" },
+            { en: "burp", vi: "vỗ ợ", ipa: "/bɜːrp/" },
+            { en: "crib", vi: "cũi", ipa: "/krɪb/" },
+            { en: "pacifier", vi: "ti giả", ipa: "/ˈpæsɪfaɪər/" },
+            { en: "swaddle", vi: "quấn khăn", ipa: "/ˈswɑːdəl/" },
+            { en: "wipe", vi: "khăn ướt", ipa: "/waɪp/" },
+            { en: "nap", vi: "ngủ ngắn", ipa: "/næp/" },
+            { en: "lullaby", vi: "ru ngủ", ipa: "/ˈlʌləbaɪ/" },
+            { en: "cradle", vi: "cái nôi", ipa: "/ˈkreɪdəl/" },
+            { en: "calm", vi: "trấn an", ipa: "/kɑːm/" },
+            { en: "cry", vi: "khóc", ipa: "/kraɪ/" },
+            { en: "smile", vi: "cười", ipa: "/smaɪl/" },
+            { en: "sneeze", vi: "hắt hơi", ipa: "/sniːz/" },
+            { en: "cough", vi: "ho", ipa: "/kɔːf/" },
+            { en: "fever", vi: "sốt", ipa: "/ˈfiːvər/" },
+            { en: "medicine", vi: "thuốc", ipa: "/ˈmɛdəsən/" },
+            { en: "doctor", vi: "bác sĩ", ipa: "/ˈdɑːktər/" },
+            { en: "midwife", vi: "nữ hộ sinh", ipa: "/ˈmɪdˌwaɪf/" },
+            { en: "clinic", vi: "phòng khám", ipa: "/ˈklɪnɪk/" },
+            { en: "appointment", vi: "lịch hẹn", ipa: "/əˈpɔɪntmənt/" },
+            { en: "check-up", vi: "khám định kỳ", ipa: "/ˈtʃɛkˌʌp/" },
+            { en: "stroller walk", vi: "đẩy xe đi dạo", ipa: "/ˈstroʊlər wɔːk/" },
+            { en: "fresh air", vi: "không khí trong lành", ipa: "/frɛʃ ɛr/" },
+            { en: "park", vi: "công viên", ipa: "/pɑːrk/" },
+            { en: "outside", vi: "bên ngoài", ipa: "/ˈaʊtsaɪd/" },
+            { en: "inside", vi: "bên trong", ipa: "/ɪnˈsaɪd/" },
+            { en: "grocery", vi: "cửa hàng thực phẩm", ipa: "/ˈɡroʊsəri/" },
+            { en: "supermarket", vi: "siêu thị", ipa: "/ˈsuːpərˌmɑːrkɪt/" },
+            { en: "shopping list", vi: "danh sách mua", ipa: "/ˈʃɑːpɪŋ lɪst/" },
+            { en: "detergent", vi: "nước giặt", ipa: "/dɪˈtɜːrdʒənt/" },
+            { en: "softener", vi: "nước xả", ipa: "/ˈsɔːfənər/" },
+            { en: "laundry", vi: "giặt giũ", ipa: "/ˈlɔːndri/" },
+            { en: "dry", vi: "phơi, sấy", ipa: "/draɪ/" },
+            { en: "fold", vi: "gấp", ipa: "/foʊld/" },
+            { en: "iron", vi: "ủi", ipa: "/ˈaɪərn/" },
+            { en: "trash", vi: "rác", ipa: "/træʃ/" },
+            { en: "bin", vi: "thùng rác", ipa: "/bɪn/" },
+            { en: "wipe down", vi: "lau sạch", ipa: "/waɪp daʊn/" },
+            { en: "mop", vi: "lau sàn", ipa: "/mɑːp/" },
+            { en: "sweep", vi: "quét", ipa: "/swiːp/" },
+            { en: "tidy", vi: "ngăn nắp", ipa: "/ˈtaɪdi/" },
+            { en: "organize", vi: "sắp xếp", ipa: "/ˈɔːrɡənaɪz/" },
+            { en: "fridge", vi: "tủ lạnh", ipa: "/frɪdʒ/" },
+            { en: "freezer", vi: "ngăn đá", ipa: "/ˈfriːzər/" },
+            { en: "stove", vi: "bếp lò", ipa: "/stoʊv/" },
+            { en: "oven", vi: "lò nướng", ipa: "/ˈʌvən/" },
+            { en: "microwave", vi: "lò vi sóng", ipa: "/ˈmaɪkrəˌweɪv/" },
+            { en: "sink", vi: "bồn rửa", ipa: "/sɪŋk/" },
+            { en: "tap", vi: "vòi nước", ipa: "/tæp/" },
+            { en: "towel", vi: "khăn", ipa: "/ˈtaʊəl/" },
+            { en: "tissue", vi: "khăn giấy", ipa: "/ˈtɪʃuː/" },
+            { en: "blanket cover", vi: "vỏ chăn", ipa: "/ˈblæŋkɪt ˈkʌvər/" },
+            { en: "sheet", vi: "ga giường", ipa: "/ʃiːt/" },
+            { en: "mattress", vi: "nệm", ipa: "/ˈmætrəs/" },
+            { en: "heater", vi: "máy sưởi", ipa: "/ˈhiːtər/" },
+            { en: "shower", vi: "vòi tắm", ipa: "/ˈʃaʊər/" },
+            { en: "shampoo", vi: "dầu gội", ipa: "/ʃæmˈpuː/" },
+            { en: "soap", vi: "xà phòng", ipa: "/soʊp/" },
+            { en: "cream", vi: "kem", ipa: "/kriːm/" },
+            { en: "lotion", vi: "kem dưỡng", ipa: "/ˈloʊʃən/" },
+            { en: "sanitizer", vi: "dung dịch sát khuẩn", ipa: "/ˈsænɪtaɪzər/" },
+            { en: "allergy", vi: "dị ứng", ipa: "/ˈælərdʒi/" },
+            { en: "schedule", vi: "lịch", ipa: "/ˈskɛdʒuːl/" },
+            { en: "routine", vi: "thói quen hàng ngày", ipa: "/ruːˈtiːn/" },
+            { en: "quiet", vi: "yên tĩnh", ipa: "/ˈkwaɪət/" },
+            { en: "noise", vi: "tiếng ồn", ipa: "/nɔɪz/" },
+            { en: "gentle", vi: "nhẹ nhàng", ipa: "/ˈdʒɛntəl/" },
+            { en: "strong", vi: "mạnh", ipa: "/strɔːŋ/" },
+            { en: "careful", vi: "cẩn thận", ipa: "/ˈkɛrfəl/" },
+            { en: "support", vi: "đỡ, hỗ trợ", ipa: "/səˈpɔːrt/" },
+            { en: "lift", vi: "nâng", ipa: "/lɪft/" },
+            { en: "drop", vi: "làm rơi", ipa: "/drɑːp/" },
+            { en: "spill", vi: "làm đổ", ipa: "/spɪl/" },
+            { en: "warm up", vi: "hâm nóng", ipa: "/wɔːrm ʌp/" },
+            { en: "cool down", vi: "để nguội", ipa: "/kuːl daʊn/" },
+            { en: "measure", vi: "đo", ipa: "/ˈmɛʒər/" },
+            { en: "mix", vi: "trộn", ipa: "/mɪks/" },
+            { en: "shake", vi: "lắc", ipa: "/ʃeɪk/" },
+            { en: "check", vi: "kiểm tra", ipa: "/tʃɛk/" },
+            { en: "temperature", vi: "nhiệt độ", ipa: "/ˈtɛmprətʃər/" },
+            { en: "soft", vi: "mềm", ipa: "/sɔːft/" },
+            { en: "hard", vi: "cứng", ipa: "/hɑːrd/" },
+            { en: "heavy", vi: "nặng", ipa: "/ˈhɛvi/" },
+            { en: "light-weight", vi: "nhẹ", ipa: "/ˈlaɪt weɪt/" },
+            { en: "borrow", vi: "mượn", ipa: "/ˈbɑːroʊ/" },
+            { en: "return", vi: "trả", ipa: "/rɪˈtɜːrn/" },
+            { en: "visit", vi: "thăm", ipa: "/ˈvɪzɪt/" },
+            { en: "neighbor", vi: "hàng xóm", ipa: "/ˈneɪbər/" },
+            { en: "welcome", vi: "chào đón", ipa: "/ˈwɛlkəm/" },
+            { en: "stay", vi: "ở lại", ipa: "/steɪ/" },
+            { en: "leave", vi: "rời đi", ipa: "/liːv/" },
+            { en: "come", vi: "đến", ipa: "/kʌm/" },
+            { en: "go", vi: "đi", ipa: "/ɡoʊ/" },
+            { en: "bring back", vi: "mang về", ipa: "/brɪŋ bæk/" },
+            { en: "downstairs", vi: "tầng dưới", ipa: "/ˌdaʊnˈstɛərz/" },
+            { en: "upstairs", vi: "tầng trên", ipa: "/ˌʌpˈstɛərz/" },
+            { en: "hallway", vi: "hành lang", ipa: "/ˈhɔːlweɪ/" },
+            { en: "entrance", vi: "lối vào", ipa: "/ˈɛntrəns/" },
+            { en: "backyard", vi: "sân sau", ipa: "/ˈbækˌjɑːrd/" },
+            { en: "balcony", vi: "ban công", ipa: "/ˈbælkəni/" },
+            { en: "wardrobe", vi: "tủ quần áo", ipa: "/ˈwɔːrdroʊb/" },
+            { en: "drawer", vi: "ngăn kéo", ipa: "/drɔːr/" },
+            { en: "cupboard", vi: "tủ bếp", ipa: "/ˈkʌbərd/" },
+            { en: "kettle", vi: "ấm đun nước", ipa: "/ˈkɛtəl/" },
+            { en: "pot", vi: "nồi", ipa: "/pɒt/" },
+            { en: "pan", vi: "chảo", ipa: "/pæn/" },
+            { en: "lid", vi: "nắp", ipa: "/lɪd/" },
+            { en: "plate", vi: "đĩa", ipa: "/pleɪt/" },
+            { en: "bowl", vi: "tô", ipa: "/boʊl/" },
+            { en: "fork", vi: "nĩa", ipa: "/fɔːrk/" },
+            { en: "spoon", vi: "thìa", ipa: "/spuːn/" },
+            { en: "knife", vi: "dao", ipa: "/naɪf/" },
+            { en: "chop", vi: "chặt, thái", ipa: "/tʃɒp/" },
+            { en: "boil", vi: "luộc", ipa: "/bɔɪl/" },
+            { en: "steam", vi: "hấp", ipa: "/stiːm/" },
+            { en: "fry", vi: "chiên", ipa: "/fraɪ/" },
+            { en: "grill", vi: "nướng", ipa: "/ɡrɪl/" },
+            { en: "pour", vi: "rót", ipa: "/pɔːr/" },
+            { en: "stir", vi: "khuấy", ipa: "/stɜːr/" },
+            { en: "taste", vi: "nếm", ipa: "/teɪst/" },
+            { en: "salty", vi: "mặn", ipa: "/ˈsɔːlti/" },
+            { en: "sweet", vi: "ngọt", ipa: "/swiːt/" },
+            { en: "sour", vi: "chua", ipa: "/ˈsaʊər/" },
+            { en: "bitter", vi: "đắng", ipa: "/ˈbɪtər/" },
+            { en: "fresh", vi: "tươi", ipa: "/frɛʃ/" },
+            { en: "frozen", vi: "đông lạnh", ipa: "/ˈfroʊzən/" },
+            { en: "expired", vi: "hết hạn", ipa: "/ɪkˈspaɪərd/" },
+            { en: "prepare", vi: "chuẩn bị", ipa: "/prɪˈpɛər/" },
+            { en: "serve", vi: "dọn món", ipa: "/sɜːrv/" },
+            { en: "leftovers", vi: "đồ ăn thừa", ipa: "/ˈlɛftˌoʊvərz/" },
+            { en: "container", vi: "hộp đựng", ipa: "/kənˈteɪnər/" },
+            { en: "label", vi: "dán nhãn", ipa: "/ˈleɪbəl/" },
+            { en: "fridge door", vi: "cửa tủ lạnh", ipa: "/frɪdʒ dɔːr/" },
+            { en: "pantry", vi: "tủ đồ khô", ipa: "/ˈpæntri/" },
+            { en: "snack", vi: "đồ ăn nhẹ", ipa: "/snæk/" },
+            { en: "spices", vi: "gia vị", ipa: "/ˈspaɪsɪz/" },
+            { en: "garlic", vi: "tỏi", ipa: "/ˈɡɑːrlɪk/" },
+            { en: "ginger", vi: "gừng", ipa: "/ˈdʒɪndʒər/" },
+            { en: "onion", vi: "hành tây", ipa: "/ˈʌnjən/" },
+            { en: "carrot", vi: "cà rốt", ipa: "/ˈkærət/" },
+            { en: "potato", vi: "khoai tây", ipa: "/pəˈteɪtoʊ/" },
+            { en: "egg", vi: "trứng", ipa: "/ɛɡ/" },
+            { en: "rice", vi: "cơm", ipa: "/raɪs/" },
+            { en: "noodle", vi: "mì", ipa: "/ˈnuːdəl/" },
+            { en: "porridge", vi: "cháo", ipa: "/ˈpɔːrɪdʒ/" },
+            { en: "bath", vi: "tắm", ipa: "/bæθ/" },
+            { en: "bathtub", vi: "bồn tắm", ipa: "/ˈbæθˌtʌb/" },
+            { en: "warm water", vi: "nước ấm", ipa: "/wɔːrm ˈwɔːtər/" },
+            { en: "towel dry", vi: "lau khô", ipa: "/ˈtaʊəl draɪ/" },
+            { en: "brush", vi: "chải", ipa: "/brʌʃ/" },
+            { en: "comb", vi: "lược", ipa: "/koʊm/" },
+            { en: "hair dryer", vi: "máy sấy tóc", ipa: "/ˈhɛr ˌdraɪər/" },
+            { en: "pajamas", vi: "đồ ngủ", ipa: "/pəˈdʒæməz/" },
+            { en: "socks", vi: "vớ", ipa: "/sɑːks/" },
+            { en: "gloves", vi: "găng tay", ipa: "/ɡlʌvz/" },
+            { en: "hat", vi: "mũ", ipa: "/hæt/" },
+            { en: "jacket", vi: "áo khoác", ipa: "/ˈdʒækɪt/" },
+            { en: "blanket wrap", vi: "quấn chăn", ipa: "/ˈblæŋkɪt ræp/" },
+            { en: "protect", vi: "bảo vệ", ipa: "/prəˈtɛkt/" },
+            { en: "comfort", vi: "dỗ dành", ipa: "/ˈkʌmfərt/" },
+            { en: "cuddle", vi: "ôm nhẹ", ipa: "/ˈkʌdəl/" },
+            { en: "hold", vi: "bế", ipa: "/hoʊld/" },
+            { en: "lay down", vi: "đặt nằm", ipa: "/leɪ daʊn/" },
+            { en: "pick up", vi: "bế lên", ipa: "/pɪk ʌp/" },
+            { en: "bedtime", vi: "giờ ngủ", ipa: "/ˈbɛdtaɪm/" },
+            { en: "morning", vi: "buổi sáng", ipa: "/ˈmɔːrnɪŋ/" },
+            { en: "evening", vi: "buổi tối", ipa: "/ˈiːvnɪŋ/" },
+            { en: "midnight", vi: "nửa đêm", ipa: "/ˈmɪdnaɪt/" },
+            { en: "early", vi: "sớm", ipa: "/ˈɜːrli/" },
+            { en: "late", vi: "muộn", ipa: "/leɪt/" },
+            { en: "arrive", vi: "đến nơi", ipa: "/əˈraɪv/" },
+            { en: "depart", vi: "khởi hành", ipa: "/dɪˈpɑːrt/" },
+            { en: "boarding", vi: "lên máy bay", ipa: "/ˈbɔːrdɪŋ/" },
+            { en: "check-in", vi: "làm thủ tục", ipa: "/ˈtʃɛk ɪn/" },
+            { en: "passport", vi: "hộ chiếu", ipa: "/ˈpæspɔːrt/" },
+            { en: "luggage", vi: "hành lý", ipa: "/ˈlʌɡɪdʒ/" },
+            { en: "suitcase", vi: "vali", ipa: "/ˈsuːtkeɪs/" },
+            { en: "security check", vi: "kiểm tra an ninh", ipa: "/sɪˈkjʊərəti tʃɛk/" },
+            { en: "gate", vi: "cổng", ipa: "/ɡeɪt/" },
+            { en: "seat", vi: "ghế", ipa: "/siːt/" },
+            { en: "window seat", vi: "ghế gần cửa sổ", ipa: "/ˈwɪndoʊ siːt/" },
+            { en: "aisle seat", vi: "ghế lối đi", ipa: "/aɪl siːt/" },
+            { en: "flight attendant", vi: "tiếp viên", ipa: "/flaɪt əˈtɛndənt/" },
+            { en: "water please", vi: "cho tôi nước", ipa: "/ˈwɔːtər pliːz/" },
+            { en: "help me", vi: "giúp tôi", ipa: "/hɛlp miː/" },
+            { en: "understand", vi: "hiểu", ipa: "/ˌʌndərˈstænd/" },
+            { en: "repeat", vi: "nhắc lại", ipa: "/rɪˈpiːt/" },
+            { en: "slowly", vi: "chậm", ipa: "/ˈsloʊli/" },
+            { en: "thank you", vi: "cảm ơn", ipa: "/ˈθæŋk juː/" },
+            { en: "excuse me", vi: "xin lỗi/làm ơn", ipa: "/ɪkˈskjuːz miː/" },
+            { en: "shelf", vi: "kệ", ipa: "/ʃɛlf/" },
+            { en: "blanket", vi: "chăn", ipa: "/ˈblæŋ.kɪt/" },
+            { en: "pillow", vi: "gối", ipa: "/ˈpɪl.oʊ/" },
+            { en: "wet wipes", vi: "khăn ướt", ipa: "/wɛt waɪps/" },
+            { en: "bottle warmer", vi: "máy hâm bình sữa", ipa: "/ˈbɒt.əl ˈwɔːr.mər/" },
+            { en: "stroller", vi: "xe đẩy", ipa: "/ˈstroʊ.lər/" },
+            { en: "crib mattress", vi: "nệm cũi", ipa: "/krɪb ˈmæt.rəs/" },
+            { en: "babysitter", vi: "người trông trẻ", ipa: "/ˈbeɪ.biˌsɪt.ər/" },
+            { en: "laundry basket", vi: "giỏ đựng đồ giặt", ipa: "/ˈlɔːn.dri ˈbæs.kɪt/" },
+            { en: "rinse", vi: "xả", ipa: "/rɪns/" },
+            { en: "vacuum", vi: "hút bụi", ipa: "/ˈvæk.juːm/" },
+            { en: "sanitize", vi: "khử khuẩn", ipa: "/ˈsæn.ɪ.taɪz/" },
+            { en: "disinfect", vi: "khử trùng", ipa: "/ˌdɪs.ɪnˈfekt/" },
+            { en: "rash", vi: "phát ban", ipa: "/ræʃ/" },
+            { en: "ointment", vi: "thuốc mỡ", ipa: "/ˈɔɪnt.mənt/" },
+            { en: "fever patch", vi: "miếng hạ sốt", ipa: "/ˈfiː.vər pætʃ/" },
+            { en: "soothing", vi: "làm dịu", ipa: "/ˈsuː.ðɪŋ/" },
+            { en: "babymonitor", vi: "máy theo dõi trẻ", ipa: "/ˈbeɪ.biˌmɒn.ɪ.tər/" },
+            { en: "diaper cream", vi: "kem chống hăm", ipa: "/ˈdaɪ.pər kriːm/" },
+            { en: "pacifier clip", vi: "dây giữ ti giả", ipa: "/ˈpæs.ɪ.faɪ.ər klɪp/" },
+            { en: "bib", vi: "yếm", ipa: "/bɪb/" },
+            { en: "burp cloth", vi: "khăn vải cho bé ợ", ipa: "/bɜːrp klɒθ/" },
+            { en: "meal prep", vi: "chuẩn bị bữa ăn", ipa: "/ˈmiːl prep/" },
+            { en: "portion", vi: "khẩu phần", ipa: "/ˈpɔːr.ʃən/" },
+            { en: "simmer", vi: "ninh nhỏ lửa", ipa: "/ˈsɪm.ər/" },
+            { en: "blend", vi: "xay", ipa: "/blend/" },
+            { en: "puree", vi: "nghiền nhuyễn", ipa: "/pjʊˈreɪ/" },
+            { en: "frying pan", vi: "chảo", ipa: "/ˈfraɪ.ɪŋ pæn/" },
+            { en: "chopping board", vi: "thớt", ipa: "/ˈtʃɒp.ɪŋ bɔːrd/" },
+            { en: "apron", vi: "tạp dề", ipa: "/ˈeɪ.prən/" },
+            { en: "grocery list", vi: "danh sách mua đồ", ipa: "/ˈɡroʊ.sə.ri lɪst/" },
+            { en: "receipt", vi: "hóa đơn", ipa: "/rɪˈsiːt/" },
+            { en: "refill", vi: "bổ sung", ipa: "/ˈriː.fɪl/" },
+            { en: "sponge", vi: "miếng rửa", ipa: "/spʌndʒ/" },
+            { en: "trash bag", vi: "túi rác", ipa: "/træʃ bæɡ/" },
+            { en: "garbage bin", vi: "thùng rác", ipa: "/ˈɡɑːr.bɪdʒ bɪn/" },
+            { en: "recycle", vi: "tái chế", ipa: "/riːˈsaɪ.kəl/" },
+            { en: "insurance", vi: "bảo hiểm", ipa: "/ɪnˈʃʊr.əns/" },
+            { en: "pharmacy", vi: "hiệu thuốc", ipa: "/ˈfɑːr.mə.si/" },
+            { en: "traffic", vi: "giao thông", ipa: "/ˈtræf.ɪk/" },
+            { en: "roundabout", vi: "bùng binh", ipa: "/ˈraʊnd.ə.baʊt/" },
+            { en: "subway", vi: "tàu điện ngầm", ipa: "/ˈsʌb.weɪ/" },
+            { en: "platform", vi: "sân ga", ipa: "/ˈplæt.fɔːrm/" },
+            { en: "ticket machine", vi: "máy bán vé", ipa: "/ˈtɪk.ɪt məˌʃiːn/" },
+            { en: "fine", vi: "phạt", ipa: "/faɪn/" },
+            { en: "landlord", vi: "chủ nhà", ipa: "/ˈlænd.lɔːrd/" },
+            { en: "rent", vi: "tiền thuê nhà", ipa: "/rent/" },
+            { en: "radiator", vi: "lò sưởi nước", ipa: "/ˈreɪ.di.eɪ.tər/" },
+            { en: "curtain", vi: "rèm", ipa: "/ˈkɜːr.tən/" },
+            { en: "keychain", vi: "móc chìa khóa", ipa: "/ˈkiː.tʃeɪn/" },
+            { en: "mailbox", vi: "hộp thư", ipa: "/ˈmeɪl.bɒks/" },
+            { en: "delivery", vi: "giao hàng", ipa: "/dɪˈlɪv.ər.i/" },
+            { en: "signature", vi: "chữ ký", ipa: "/ˈsɪɡ.nə.tʃər/" },
+            { en: "friendly", vi: "thân thiện", ipa: "/ˈfrend.li/" },
+            { en: "polite", vi: "lịch sự", ipa: "/pəˈlaɪt/" },
+            { en: "quiet hours", vi: "giờ yên lặng", ipa: "/ˈkwaɪ.ət aʊərz/" },
+            { en: "recycling room", vi: "phòng phân loại rác", ipa: "/riːˈsaɪ.klɪŋ ruːm/" },
+            { en: "snow", vi: "tuyết", ipa: "/snoʊ/" },
+            { en: "slippery", vi: "trơn", ipa: "/ˈslɪp.ər.i/" },
+            { en: "boots", vi: "giày boots", ipa: "/buːts/" },
+            { en: "basement", vi: "tầng hầm", ipa: "/ˈbeɪs.mənt/" },
+            { en: "attic", vi: "gác mái", ipa: "/ˈæt.ɪk/" },
+            { en: "doorstep", vi: "bậc cửa", ipa: "/ˈdɔːr.step/" },
+            { en: "intercom", vi: "chuông liên lạc", ipa: "/ˈɪn.tər.kɒm/" },
+            { en: "security code", vi: "mã mở cửa", ipa: "/sɪˈkjʊr.ə.ti koʊd/" },
+            { en: "emergency", vi: "tình huống khẩn cấp", ipa: "/ɪˈmɜːr.dʒən.si/" },
+            { en: "ambulance", vi: "xe cứu thương", ipa: "/ˈæm.bjʊ.ləns/" },
+            { en: "fire alarm", vi: "báo cháy", ipa: "/ˈfaɪər əˌlɑːrm/" },
+            { en: "exit", vi: "lối ra", ipa: "/ˈeɡ.zɪt/" },
+            { en: "stairs", vi: "cầu thang", ipa: "/sterz/" },
+            { en: "elevator", vi: "thang máy", ipa: "/ˈel.ə.veɪ.tər/" },
+            { en: "railing", vi: "tay vịn", ipa: "/ˈreɪ.lɪŋ/" },
+            { en: "oven mitts", vi: "găng chống nóng", ipa: "/ˈʌv.ən mɪts/" },
+            { en: "pressure cooker", vi: "nồi áp suất", ipa: "/ˈpreʃ.ər ˈkʊk.ər/" },
+            { en: "ladle", vi: "muôi", ipa: "/ˈleɪ.dl/" },
+            { en: "spatula", vi: "cái xẻng lật", ipa: "/ˈspætʃ.ə.lə/" },
+            { en: "pot lid", vi: "nắp nồi", ipa: "/pɒt lɪd/" },
+            { en: "groceries", vi: "đồ tạp hóa", ipa: "/ˈɡroʊ.sər.iz/" },
+            { en: "butcher", vi: "cửa hàng thịt", ipa: "/ˈbʊtʃ.ər/" },
+            { en: "bakery", vi: "tiệm bánh", ipa: "/ˈbeɪ.kər.i/" },
+            { en: "dairy", vi: "đồ từ sữa", ipa: "/ˈder.i/" },
+            { en: "expiration date", vi: "hạn sử dụng", ipa: "/ˌek.spəˈreɪ.ʃən deɪt/" },
+            { en: "seasoning", vi: "gia vị", ipa: "/ˈsiː.zən.ɪŋ/" },
+            { en: "parsley", vi: "rau mùi tây", ipa: "/ˈpɑːr.sli/" },
+            { en: "mint", vi: "bạc hà", ipa: "/mɪnt/" },
+            { en: "cinnamon", vi: "quế", ipa: "/ˈsɪn.ə.mən/" },
+            { en: "napkin", vi: "khăn ăn", ipa: "/ˈnæp.kɪn/" },
+            { en: "dining table", vi: "bàn ăn", ipa: "/ˈdaɪ.nɪŋ ˌteɪ.bəl/" },
+            { en: "sofa", vi: "ghế sofa", ipa: "/ˈsoʊ.fə/" },
+            { en: "cushion", vi: "gối tựa", ipa: "/ˈkʊʃ.ən/" },
+            { en: "carpet", vi: "thảm", ipa: "/ˈkɑːr.pɪt/" },
+            { en: "wardrobe hanger", vi: "móc áo", ipa: "/ˈhæŋ.ər/" },
+            { en: "laundry detergent pod", vi: "viên giặt", ipa: "/ˈlɔːn.dri pɒd/" },
+            { en: "ironing board", vi: "bàn ủi", ipa: "/ˈaɪə.rɪŋ bɔːrd/" },
+            { en: "wrinkle", vi: "nhăn", ipa: "/ˈrɪŋ.kəl/" },
+            { en: "hang", vi: "treo", ipa: "/hæŋ/" },
+            { en: "grocery cart", vi: "xe đẩy siêu thị", ipa: "/ˈɡroʊ.sə.ri kɑːrt/" },
+            { en: "aisle", vi: "lối đi siêu thị", ipa: "/aɪl/" },
+            { en: "barcode", vi: "mã vạch", ipa: "/ˈbɑːr.koʊd/" },
+            { en: "refund", vi: "hoàn tiền", ipa: "/ˈriː.fʌnd/" },
+            { en: "exchange", vi: "đổi hàng", ipa: "/ɪksˈtʃeɪndʒ/" },
+            { en: "fitting room", vi: "phòng thử đồ", ipa: "/ˈfɪt.ɪŋ ruːm/" },
+            { en: "winter coat", vi: "áo khoác mùa đông", ipa: "/ˈwɪn.tər koʊt/" },
+            { en: "scarf", vi: "khăn choàng", ipa: "/skɑːrf/" },
+            { en: "thermal shirt", vi: "áo giữ nhiệt", ipa: "/ˈθɝː.məl ʃɜːrt/" },
+            { en: "indoor shoes", vi: "dép đi trong nhà", ipa: "/ˈɪn.dɔːr ʃuːz/" },
+            { en: "humidifier", vi: "máy tạo ẩm", ipa: "/hjuːˈmɪd.ə.faɪ.ər/" },
+            { en: "air purifier", vi: "máy lọc không khí", ipa: "/ˈer ˌpjʊr.ə.faɪ.ər/" },
+            { en: "thermostat", vi: "bộ điều nhiệt", ipa: "/ˈθɝː.mə.stæt/" },
+            { en: "fuse box", vi: "hộp cầu chì", ipa: "/fjuːz bɒks/" },
+            { en: "power outlet", vi: "ổ cắm", ipa: "/ˈpaʊ.ər ˌaʊt.lɪt/" },
+            { en: "charger", vi: "bộ sạc", ipa: "/ˈtʃɑːr.dʒər/" },
+            { en: "screen", vi: "màn hình", ipa: "/skriːn/" },
+            { en: "Wi-Fi password", vi: "mật khẩu Wi-Fi", ipa: "/ˈwaɪ.faɪ ˈpæs.wɜːrd/" },
+            { en: "connection", vi: "kết nối", ipa: "/kəˈnek.ʃən/" },
+            { en: "headset", vi: "tai nghe chụp", ipa: "/ˈhed.set/" },
+            { en: "voicemail", vi: "hộp thư thoại", ipa: "/ˈvɔɪs.meɪl/" },
+            { en: "ringtone", vi: "nhạc chuông", ipa: "/ˈrɪŋ.toʊn/" },
+            { en: "charging cable", vi: "dây sạc", ipa: "/ˈtʃɑːr.dʒɪŋ ˌkeɪ.bəl/" },
+            { en: "appointment letter", vi: "giấy hẹn", ipa: "/əˈpɔɪnt.mənt ˈlet.ər/" },
+            { en: "registration", vi: "đăng ký", ipa: "/ˌredʒ.ɪˈstreɪ.ʃən/" },
+            { en: "stroller ramp", vi: "đường dốc cho xe đẩy", ipa: "/ˈræmp/" },
+            { en: "baby carrier", vi: "địu em bé", ipa: "/ˈbeɪ.bi ˌkær.i.ər/" },
+            { en: "teething toy", vi: "đồ gặm nướu", ipa: "/ˈtiː.ðɪŋ tɔɪ/" },
+            { en: "newborn checkup", vi: "kiểm tra trẻ sơ sinh", ipa: "/ˈtʃek.ʌp/" },
+            { en: "pediatrician", vi: "bác sĩ nhi", ipa: "/ˌpiː.di.əˈtrɪʃ.ən/" },
+            { en: "symptoms", vi: "triệu chứng", ipa: "/ˈsɪmp.təmz/" },
+            { en: "appointment card", vi: "thẻ lịch hẹn", ipa: "/əˈpɔɪnt.mənt kɑːrd/" },
+            { en: "breastfeeding pillow", vi: "gối cho bú", ipa: "/ˈbrestˌfiːdɪŋ ˈpɪl.oʊ/" },
+            { en: "nursing bra", vi: "áo lót cho mẹ bỉm", ipa: "/ˈnɜː.sɪŋ brɑː/" },
+            { en: "pumping", vi: "hút sữa", ipa: "/ˈpʌmp.ɪŋ/" },
+            { en: "milk storage bag", vi: "túi trữ sữa", ipa: "/stɔːr.ɪdʒ bæɡ/" },
+            { en: "cradle cap", vi: "cứt trâu", ipa: "/ˈkreɪ.dl kæp/" },
         ];
-       // --- 2. LOGIC MỚI (CHUNG) ---
+
+        // --- 2. LOGIC MỚI (CHUNG) ---
         
         let currentMode = 'learning'; // 'learning' hoặc 'mastered'
 
