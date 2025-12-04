@@ -2,38 +2,55 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mesbox Flashcards Pro</title> 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flashcards Pro</title> 
+    <link rel="icon" type="image/png" href="https://lh3.googleusercontent.com/a/ACg8ocLm2zmxrsiuv3p344IkTBYO35_JmBkGlnUHW5wfOU9thQ07tSFz=s360-c-no">
+<link rel="shortcut icon" type="image/png" href="https://lh3.googleusercontent.com/a/ACg8ocLm2zmxrsiuv3p344IkTBYO35_JmBkGlnUHW5wfOU9thQ07tSFz=s360-c-no">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#111827">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3405/3405802.png">
 
     <style>
         body {
-            background-color: #0f172a;
-            color: #e2e8f0;
+            background-color: #111827;
+            color: #e5e5e5;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            -webkit-tap-highlight-color: transparent;
-            overscroll-behavior-y: none; /* Chống kéo nảy trang trên iOS */
         }
         .perspective-1000 { perspective: 1000px; }
         .transform-style-3d { transform-style: preserve-3d; }
         .backface-hidden { backface-visibility: hidden; }
         .rotate-y-180 { transform: rotateY(180deg); }
-        .card-container { transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .card-container { transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
         .card-flipped { transform: rotateY(180deg); }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #1f2937; }
+        ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
         
-        .tab-active { background-color: #3b82f6; color: white; border-color: #3b82f6; }
-        .tab-inactive { background-color: #1e293b; color: #94a3b8; border-color: #374151; }
+        /* Hiệu ứng Active cho Tab */
+        .tab-active {
+            background-color: #2563eb;
+            color: white;
+            border-color: #3b82f6;
+        }
+        .tab-inactive {
+            background-color: #1f2937;
+            color: #9ca3af;
+            border-color: #374151;
+        }
     </style>
 </head>
-<body class="min-h-screen flex flex-col items-center justify-start pt-4 pb-6 px-4">
+<body class="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-900 overflow-hidden relative">
 
-    <div class="fixed top-3 left-3 z-50 flex gap-2 opacity-30 hover:opacity-100 transition-opacity">
-        <button id="btn-export" class="w-8 h-8 bg-slate-800 rounded-full border border-slate-600 text-blue-400 flex items-center justify-center"><i class="fas fa-file-export text-xs"></i></button>
-        <button id="btn-import" class="w-8 h-8 bg-slate-800 rounded-full border border-slate-600 text-purple-400 flex items-center justify-center"><i class="fas fa-file-import text-xs"></i></button>
+    <div class="fixed top-4 left-4 z-50 flex gap-2">
+        <button id="btn-export" class="w-10 h-10 bg-blue-900/50 hover:bg-blue-700 border border-blue-700 rounded-full text-blue-200 shadow-lg flex items-center justify-center transition active:scale-95" title="Xuất dữ liệu (Backup)">
+            <i class="fas fa-file-export"></i>
+        </button>
+        <button id="btn-import" class="w-10 h-10 bg-purple-900/50 hover:bg-purple-700 border border-purple-700 rounded-full text-purple-200 shadow-lg flex items-center justify-center transition active:scale-95" title="Nhập dữ liệu (Restore)">
+            <i class="fas fa-file-import"></i>
+        </button>
         <input type="file" id="file-import" class="hidden" accept=".json">
     </div>
 
@@ -41,99 +58,107 @@
         <i class="fas fa-plus text-2xl"></i>
     </button>
 
-    <div id="add-modal" class="hidden fixed inset-0 bg-black/90 z-[60] flex items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-slate-800 rounded-2xl w-full max-w-sm p-6 border border-slate-700 shadow-2xl relative">
-            <h3 class="text-xl font-bold text-white mb-4 text-center">Thêm Thẻ Mới</h3>
-            <div class="space-y-4">
-                <input id="input-en" type="text" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white focus:border-blue-500 outline-none" placeholder="English (VD: Apple)">
-                <input id="input-vi" type="text" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white focus:border-blue-500 outline-none" placeholder="Tiếng Việt (VD: Quả táo)">
+    <div id="add-modal" class="hidden fixed inset-0 bg-black/80 z-[60] flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-gray-800 rounded-2xl w-full max-w-sm p-6 border border-gray-700 shadow-2xl relative">
+            <h3 class="text-xl font-bold text-white mb-4">Thêm Flashcard mới</h3>
+            <div class="mb-4">
+                <label class="block text-gray-400 text-sm mb-1">Tiếng Anh (Word)</label>
+                <input id="input-en" type="text" class="w-full bg-gray-900 border border-gray-600 rounded-lg p-3 text-white focus:border-green-500 outline-none" placeholder="Ví dụ: apple">
             </div>
-            <div class="flex gap-3 mt-6">
-                <button id="btn-cancel" class="flex-1 py-3 bg-slate-700 rounded-xl text-slate-300 font-bold">Hủy</button>
-                <button id="btn-save" class="flex-1 py-3 bg-blue-600 rounded-xl text-white font-bold flex justify-center items-center gap-2">
-                    <span>Lưu</span> <i id="spinner" class="fas fa-spinner fa-spin hidden"></i>
+            <div class="mb-6">
+                <label class="block text-gray-400 text-sm mb-1">Nghĩa Tiếng Việt</label>
+                <input id="input-vi" type="text" class="w-full bg-gray-900 border border-gray-600 rounded-lg p-3 text-white focus:border-green-500 outline-none" placeholder="Ví dụ: quả táo">
+            </div>
+            <div class="flex gap-3">
+                <button id="btn-cancel" class="flex-1 py-3 bg-gray-700 hover:bg-gray-600 rounded-lg text-gray-300 font-medium">Hủy</button>
+                <button id="btn-save" class="flex-1 py-3 bg-green-600 hover:bg-green-500 rounded-lg text-white font-bold shadow-lg flex justify-center items-center gap-2">
+                    <span>Lưu</span>
+                    <i id="spinner" class="fas fa-spinner fa-spin hidden"></i>
                 </button>
             </div>
         </div>
     </div>
 
-    <div class="w-full max-w-md flex flex-col gap-3 h-full z-10">
+    <div class="w-full max-w-md mb-4 z-10 flex flex-col gap-4">
         
         <div class="flex justify-between items-end px-1">
-            <h1 class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">Mesbox <span class="text-white">Flashcards</span></h1>
-            <div id="index-display" class="text-xs font-mono text-slate-400 bg-slate-800 px-2 py-1 rounded border border-slate-700">0/0</div>
-        </div>
-
-        <div class="flex p-1 bg-slate-800/80 rounded-xl border border-slate-700">
-            <button id="tab-learning" class="flex-1 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all tab-active">Đang học <span id="count-learning" class="opacity-70">...</span></button>
-            <button id="tab-mastered" class="flex-1 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all tab-inactive">Đã thuộc <span id="count-mastered" class="opacity-70">...</span></button>
-        </div>
-
-        <div class="relative">
-            <i class="fas fa-search absolute left-4 top-3.5 text-slate-500"></i>
-            <input id="search-input" type="text" placeholder="Tìm kiếm..." class="w-full bg-slate-800/80 border border-slate-700 rounded-xl py-3 pl-10 pr-4 text-sm text-white focus:border-blue-500 outline-none" />
-        </div>
-
-        <div class="flex justify-between items-center px-1 h-10">
-            <button id="btn-toggle-master" class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300 hover:border-green-500 hover:text-green-400 transition active:scale-95">
-                <i id="icon-master" class="far fa-check-circle text-base"></i> 
-                <span id="text-master" class="text-[10px] font-bold uppercase tracking-wider">Đã thuộc?</span>
-            </button>
-
-            <button id="btn-delete" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-800 border border-slate-700 text-slate-400 hover:text-red-500 hover:border-red-500 transition active:scale-95">
-                <i class="fas fa-trash-alt text-sm"></i>
-            </button>
-        </div>
-
-        <div id="flashcard-area" class="relative w-full h-80 sm:h-96 cursor-pointer perspective-1000 group mt-1">
-            <div id="card-inner" class="relative w-full h-full duration-500 transform-style-3d card-container">
-                
-                <div class="absolute inset-0 w-full h-full bg-slate-800 rounded-3xl shadow-xl border border-slate-700 backface-hidden overflow-hidden">
-                    <span class="absolute top-4 left-4 z-20 text-[10px] font-bold text-blue-400 tracking-widest uppercase bg-blue-500/10 px-2 py-1 rounded">English</span>
-                    
-                    <div class="absolute inset-0 flex items-center justify-center px-4 z-10">
-                        <h2 id="card-front-text" class="text-4xl font-extrabold text-white text-center leading-tight break-words max-w-full drop-shadow-lg pb-10">...</h2>
-                    </div>
-
-                    <div class="absolute bottom-4 left-0 w-full flex flex-col items-center gap-2 z-20">
-                        <button id="btn-speak-front" class="w-12 h-12 rounded-full bg-blue-600 hover:bg-blue-500 flex items-center justify-center shadow-lg active:scale-95 transition">
-                            <i class="fas fa-volume-high text-white text-lg"></i>
-                        </button>
-                        <p class="text-slate-500 text-[10px] uppercase tracking-widest"><i class="fas fa-hand-pointer animate-bounce mr-1"></i> Tap to flip</p>
-                    </div>
-                </div>
-
-                <div class="absolute inset-0 w-full h-full bg-white rounded-3xl shadow-xl backface-hidden rotate-y-180 overflow-hidden">
-                    <span class="absolute top-4 left-4 z-20 text-[10px] font-bold text-slate-500 tracking-widest uppercase bg-slate-100 px-2 py-1 rounded">Meaning</span>
-                    
-                    <div class="absolute inset-0 flex flex-col items-center justify-center px-4 z-10 pb-12">
-                        <h3 id="card-back-vi" class="text-3xl font-bold text-slate-800 text-center mb-3">...</h3>
-                        <div class="px-3 py-1 bg-blue-50 rounded border border-blue-100 mb-4">
-                            <p id="card-back-ipa" class="text-lg text-blue-600 font-mono font-medium">...</p>
-                        </div>
-                    </div>
-
-                    <div class="absolute bottom-0 left-0 w-full border-t border-slate-100 py-3 bg-slate-50/50 flex flex-col items-center gap-2 z-20">
-                        <p id="card-back-en" class="text-xs text-slate-400 font-bold uppercase tracking-wider">...</p>
-                        <button id="btn-speak-back" class="w-10 h-10 rounded-full bg-white border border-slate-200 text-slate-600 flex items-center justify-center shadow-sm active:scale-95">
-                            <i class="fas fa-volume-high"></i>
-                        </button>
-                    </div>
-                </div>
-
+            <div>
+                <h1 class="text-2xl font-bold text-blue-400 tracking-tight">My <span class="text-white">Flashcards</span></h1>
+                <p id="mode-label" class="text-xs text-green-400 font-bold uppercase tracking-widest mt-1">Đang học</p>
+            </div>
+            <div id="index-display" class="text-right text-sm font-mono text-gray-300 bg-gray-800 px-3 py-1 rounded-full border border-gray-700">
+                0 / 0
             </div>
         </div>
 
-        <div class="flex justify-between items-center px-6 pb-8 mt-2">
-            <button id="btn-prev" class="w-12 h-12 rounded-full bg-slate-800 border border-slate-700 text-slate-400 active:scale-90 shadow-lg flex items-center justify-center"><i class="fas fa-arrow-left"></i></button>
-            <span class="text-[10px] text-slate-600 uppercase font-bold tracking-widest">Swipe</span>
-            <button id="btn-next" class="w-12 h-12 rounded-full bg-slate-800 border border-slate-700 text-slate-400 active:scale-90 shadow-lg flex items-center justify-center"><i class="fas fa-arrow-right"></i></button>
+        <div class="flex p-1 bg-gray-800 rounded-xl border border-gray-700">
+            <button id="tab-learning" class="flex-1 py-2 rounded-lg text-sm font-bold transition-all tab-active border shadow-sm">
+                Đang học <span id="count-learning" class="ml-1 text-xs opacity-70">(0)</span>
+            </button>
+            <button id="tab-mastered" class="flex-1 py-2 rounded-lg text-sm font-bold transition-all tab-inactive border border-transparent hover:bg-gray-700">
+                Đã thuộc <span id="count-mastered" class="ml-1 text-xs opacity-70">(0)</span>
+            </button>
         </div>
+
+        <input id="search-input" type="text" placeholder="🔍 Tìm từ vựng..." class="p-3 w-full bg-gray-800 rounded-lg text-white border border-gray-700 focus:border-blue-500 outline-none transition duration-200" />
+    </div>
+
+    <div id="flashcard-area" class="relative w-full max-w-md h-80 cursor-pointer perspective-1000 group z-10">
         
-        <div id="no-results" class="hidden text-center text-slate-500 mt-10"><p>Trống.</p></div>
+        <button id="btn-delete" class="absolute -top-10 right-0 w-8 h-8 text-gray-500 hover:text-red-500 transition z-50 flex items-center justify-center" title="Xóa thẻ này">
+            <i class="fas fa-trash-alt text-lg"></i>
+        </button>
+
+        <button id="btn-toggle-master" class="absolute -top-10 left-0 w-auto px-3 h-8 text-gray-400 hover:text-green-400 transition z-50 flex items-center justify-center gap-2 font-bold text-sm bg-gray-800/50 rounded-full border border-gray-700" title="Đánh dấu trạng thái">
+            <i id="icon-master" class="far fa-check-circle text-lg"></i>
+            <span id="text-master">Đã thuộc?</span>
+        </button>
+
+        <div id="card-inner" class="relative w-full h-full duration-500 transform-style-3d card-container">
+            <div class="absolute w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl shadow-2xl border-2 border-blue-500/50 p-8 flex flex-col items-center justify-center backface-hidden">
+                <span class="absolute top-4 left-4 text-xs font-bold text-blue-400 tracking-widest bg-blue-500/10 px-2 py-1 rounded-md uppercase">English</span>
+                <div class="flex-1 flex items-center justify-center w-full">
+                    <h2 id="card-front-text" class="text-4xl md:text-5xl font-extrabold text-white text-center leading-tight break-words max-w-full">...</h2>
+                </div>
+                <button id="btn-speak-front" class="mt-4 w-12 h-12 rounded-full bg-blue-600 hover:bg-blue-500 flex items-center justify-center transition-all shadow-xl hover:shadow-blue-500/50 active:scale-95">
+                    <i class="fas fa-volume-high text-white text-lg"></i>
+                </button>
+                <p class="mt-4 text-gray-500 text-xs flex items-center gap-2">
+                    <i class="fas fa-hand-pointer"></i> Tap to Flip
+                </p>
+            </div>
+            <div class="absolute w-full h-full bg-white rounded-2xl shadow-2xl p-8 flex flex-col items-center justify-center backface-hidden rotate-y-180 border-2 border-gray-300">
+                <span class="absolute top-4 left-4 text-xs font-bold text-gray-600 tracking-widest uppercase border border-gray-300 px-2 py-1 rounded-md">Meaning</span>
+                <div class="flex-1 flex flex-col items-center justify-center w-full space-y-4">
+                    <h3 id="card-back-vi" class="text-3xl font-bold text-gray-900 text-center">...</h3>
+                    <div class="px-4 py-2 bg-blue-50 rounded-lg border border-blue-100 shadow-inner">
+                        <p id="card-back-ipa" class="text-xl text-blue-600 font-mono font-medium tracking-wide">...</p>
+                    </div>
+                    <p id="card-back-en" class="text-sm text-gray-400 font-semibold border-t border-gray-100 pt-2">...</p>
+                </div>
+                <button id="btn-speak-back" class="mb-2 w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 flex items-center justify-center transition-all">
+                    <i class="fas fa-volume-high"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="no-results" class="hidden text-center text-gray-400 text-xl mt-10 z-20">Danh sách trống.</div>
+
+    <div class="w-full max-w-md flex justify-between items-center mt-8 z-10 px-4">
+        <button id="btn-prev" class="w-14 h-14 rounded-full bg-gray-800 border border-gray-700 text-gray-300 hover:text-white hover:border-gray-500 hover:bg-blue-800 transition flex items-center justify-center active:scale-95 shadow-lg">
+            <i class="fas fa-arrow-left text-lg"></i>
+        </button>
+        <div class="text-xs text-gray-500 font-mono flex flex-col items-center">
+            <span>← Prev | Flip | Next →</span>
+        </div>
+        <button id="btn-next" class="w-14 h-14 rounded-full bg-gray-800 border border-gray-700 text-gray-300 hover:text-white hover:border-gray-500 hover:bg-blue-800 transition flex items-center justify-center active:scale-95 shadow-lg">
+            <i class="fas fa-arrow-right text-lg"></i>
+        </button>
     </div>
 
     <script>
+        // --- 1. DATA GỐC (DEFAULT) ---
         const defaultData = [
             { en: "feeding", vi: "cho ăn", ipa: "/ˈfiːdɪŋ/" },
             { en: "nursing", vi: "chăm sóc mẹ/bé", ipa: "/ˈnɜːrsɪŋ/" },
@@ -460,103 +485,14 @@
             { en: "nursing bra", vi: "áo lót cho mẹ bỉm", ipa: "/ˈnɜː.sɪŋ brɑː/" },
             { en: "pumping", vi: "hút sữa", ipa: "/ˈpʌmp.ɪŋ/" },
             { en: "milk storage bag", vi: "túi trữ sữa", ipa: "/stɔːr.ɪdʒ bæɡ/" },
-            { en: "bedtime routine", vi: "thói quen trước khi ngủ", ipa: "/ˈbed.taɪm ruːˌtiːn/" },
-            { en: "better", vi: "tốt hơn", ipa: "/ˈbɛ.tɜ/" },
-            { en: "soothing light", vi: "đèn dịu", ipa: "/ˈsuː.ðɪŋ laɪt/" },
-            { en: "breastfeeding station", vi: "góc cho bú", ipa: "/ˈsteɪ.ʃən/" },
-            { en: "baby-proof", vi: "chống nguy hiểm cho bé", ipa: "/ˈbeɪ.bi pruːf/" },
-            { en: "cabinet lock", vi: "khóa tủ an toàn", ipa: "/ˈkæb.ɪ.nət lɒk/" },
-            { en: "corner guard", vi: "miếng ốp góc", ipa: "/ˈkɔːr.nər ɡɑːrd/" },
-            { en: "playmat", vi: "thảm chơi", ipa: "/ˈpleɪ.mæt/" },
-            { en: "storybook", vi: "sách truyện", ipa: "/ˈstɔːr.i.bʊk/" },
-            { en: "stroller cover", vi: "áo che xe đẩy", ipa: "/ˈkʌv.ər/" },
-            { en: "laundry net", vi: "túi giặt lưới", ipa: "/net/" },
-            { en: "detergent-free", vi: "không chất tẩy", ipa: "/dɪˈtɜː.dʒənt friː/" },
-            { en: "hello", vi: "xin chào", ipa: "/həˈloʊ/" },
-            { en: "good morning", vi: "chào buổi sáng", ipa: "/ɡʊd ˈmɔːrnɪŋ/" },
-            { en: "good evening", vi: "chào buổi tối", ipa: "/ɡʊd ˈiːvnɪŋ/" },
-            { en: "please", vi: "làm ơn", ipa: "/pliːz/" },
-            { en: "sorry", vi: "xin lỗi", ipa: "/ˈsɑːri/" },
-            { en: "yes", vi: "vâng", ipa: "/jɛs/" },
-            { en: "no", vi: "không", ipa: "/noʊ/" },
-            { en: "maybe", vi: "có thể", ipa: "/ˈmeɪbi/" },
-            { en: "daughter", vi: "con gái", ipa: "/ˈdɔːtər/" },
-            { en: "son-in-law", vi: "con rể", ipa: "/ˈsʌn ɪn lɔː/" },
-            { en: "baby", vi: "em bé", ipa: "/ˈbeɪbi/" },
-            { en: "newborn", vi: "trẻ sơ sinh", ipa: "/ˈnuːˌbɔːrn/" },
-            { en: "mother", vi: "mẹ", ipa: "/ˈmʌðər/" },
-            { en: "grandmother", vi: "bà", ipa: "/ˈɡrænˌmʌðər/" },
-            { en: "family", vi: "gia đình", ipa: "/ˈfæməli/" },
-            { en: "home", vi: "nhà", ipa: "/hoʊm/" },
-            { en: "room", vi: "phòng", ipa: "/ruːm/" },
-            { en: "kitchen", vi: "nhà bếp", ipa: "/ˈkɪtʃɪn/" },
-            { en: "bathroom", vi: "phòng tắm", ipa: "/ˈbæθruːm/" },
-            { en: "living room", vi: "phòng khách", ipa: "/ˈlɪvɪŋ ruːm/" },
-            { en: "bed", vi: "giường", ipa: "/bɛd/" },
-            { en: "clothes", vi: "quần áo", ipa: "/kloʊðz/" },
-            { en: "diaper", vi: "tã", ipa: "/ˈdaɪpər/" },
-            { en: "milk", vi: "sữa", ipa: "/mɪlk/" },
-            { en: "bottle", vi: "bình sữa", ipa: "/ˈbɑːtəl/" },
-            { en: "warm", vi: "ấm", ipa: "/wɔːrm/" },
-            { en: "cold", vi: "lạnh", ipa: "/koʊld/" },
-            { en: "hungry", vi: "đói", ipa: "/ˈhʌŋɡri/" },
-            { en: "sleepy", vi: "buồn ngủ", ipa: "/ˈsliːpi/" },
-            { en: "tired", vi: "mệt", ipa: "/ˈtaɪərd/" },
-            { en: "rest", vi: "nghỉ ngơi", ipa: "/rɛst/" },
-            { en: "carry", vi: "bế, mang", ipa: "/ˈkæri/" },
-            { en: "clean", vi: "dọn, sạch", ipa: "/kliːn/" },
-            { en: "wash", vi: "rửa", ipa: "/wɑːʃ/" },
-            { en: "cook", vi: "nấu ăn", ipa: "/kʊk/" },
-            { en: "vegetables", vi: "rau", ipa: "/ˈvɛdʒtəbəlz/" },
-            { en: "meat", vi: "thịt", ipa: "/miːt/" },
-            { en: "soup", vi: "súp", ipa: "/suːp/" },
-            { en: "tea", vi: "trà", ipa: "/tiː/" },
-            { en: "water", vi: "nước", ipa: "/ˈwɔːtər/" },
-            { en: "cup", vi: "cốc", ipa: "/kʌp/" },
-            { en: "table", vi: "bàn", ipa: "/ˈteɪbəl/" },
-            { en: "chair", vi: "ghế", ipa: "/tʃɛr/" },
-            { en: "floor", vi: "sàn nhà", ipa: "/flɔːr/" },
-            { en: "door", vi: "cửa", ipa: "/dɔːr/" },
-            { en: "window", vi: "cửa sổ", ipa: "/ˈwɪndoʊ/" },
-            { en: "light", vi: "đèn", ipa: "/laɪt/" },
-            { en: "dark", vi: "tối", ipa: "/dɑːrk/" },
-            { en: "afternoon", vi: "buổi chiều", ipa: "/ˌæftərˈnuːn/" },
-            { en: "night", vi: "ban đêm", ipa: "/naɪt/" },
-            { en: "today", vi: "hôm nay", ipa: "/təˈdeɪ/" },
-            { en: "tomorrow", vi: "ngày mai", ipa: "/təˈmɑːroʊ/" },
-            { en: "yesterday", vi: "hôm qua", ipa: "/ˈjɛstərdeɪ/" },
-            { en: "now", vi: "bây giờ", ipa: "/naʊ/" },
-            { en: "later", vi: "lát nữa", ipa: "/ˈleɪtər/" },
-            { en: "always", vi: "luôn luôn", ipa: "/ˈɔːlweɪz/" },
-            { en: "sometimes", vi: "thỉnh thoảng", ipa: "/ˈsʌmtaɪmz/" },
-            { en: "never", vi: "không bao giờ", ipa: "/ˈnɛvər/" },
-            { en: "need", vi: "cần", ipa: "/niːd/" },
-            { en: "want", vi: "muốn", ipa: "/wɑːnt/" },
-            { en: "like", vi: "thích", ipa: "/laɪk/" },
-            { en: "help", vi: "giúp", ipa: "/hɛlp/" },
-            { en: "bring", vi: "mang đến", ipa: "/brɪŋ/" },
-            { en: "give", vi: "đưa", ipa: "/ɡɪv/" },
-            { en: "take", vi: "lấy, mang đi", ipa: "/teɪk/" },
-            { en: "open", vi: "mở", ipa: "/ˈoʊpən/" },
-            { en: "close", vi: "đóng", ipa: "/kloʊz/" },
-            { en: "turn on", vi: "bật", ipa: "/tɜːrn ɑːn/" },
-            { en: "turn off", vi: "tắt", ipa: "/tɜːrn ɔːf/" },
-            { en: "hot", vi: "nóng", ipa: "/hɑːt/" },
-            { en: "cool", vi: "mát", ipa: "/kuːl/" },
-            { en: "dirty", vi: "bẩn", ipa: "/ˈdɜːrti/" },
-            { en: "safe", vi: "an toàn", ipa: "/seɪf/" },
-            { en: "slow", vi: "chậm", ipa: "/sloʊ/" },
-            { en: "fast", vi: "nhanh", ipa: "/fæst/" },
-            { en: "wait", vi: "đợi", ipa: "/weɪt/" },
-            { en: "listen", vi: "nghe", ipa: "/ˈlɪsən/" },
-            { en: "look", vi: "nhìn", ipa: "/lʊk/" },
-            { en: "watch", vi: "xem", ipa: "/wɑːtʃ/" },
+            { en: "cradle cap", vi: "cứt trâu", ipa: "/ˈkreɪ.dl kæp/" },
         ];
 
-        // --- 2. LOGIC ---
-        let currentMode = 'learning'; // 'learning' or 'mastered'
+        // --- 2. LOGIC MỚI (CHUNG) ---
+        
+        let currentMode = 'learning'; // 'learning' hoặc 'mastered'
 
-        // Shuffle
+        // Hàm xáo trộn (Random)
         function shuffleArray(array) {
             for (let i = array.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
@@ -568,23 +504,21 @@
         function loadData() {
             const storedPersonal = localStorage.getItem('my_flashcards');
             const personalData = storedPersonal ? JSON.parse(storedPersonal) : [];
+            
             const storedMastered = localStorage.getItem('my_mastered_list');
             const masteredList = storedMastered ? JSON.parse(storedMastered) : [];
 
-            // Merge
+            // Gộp tất cả
             const allData = [...personalData, ...defaultData];
 
-            // Counts
+            // Đếm số lượng
             const masteredCount = allData.filter(item => masteredList.includes(item.en)).length;
             const learningCount = allData.length - masteredCount;
 
-            // Update UI
-            const elLearning = document.getElementById('count-learning');
-            const elMastered = document.getElementById('count-mastered');
-            if(elLearning) elLearning.textContent = `(${learningCount})`;
-            if(elMastered) elMastered.textContent = `(${masteredCount})`;
+            document.getElementById('count-learning').textContent = `(${learningCount})`;
+            document.getElementById('count-mastered').textContent = `(${masteredCount})`;
 
-            // Filter
+            // Lọc theo chế độ
             let resultData = [];
             if (currentMode === 'learning') {
                 resultData = allData.filter(item => !masteredList.includes(item.en));
@@ -595,19 +529,20 @@
             return shuffleArray(resultData);
         }
 
-        // Init
+        // Init Data
         let fullData = loadData(); 
         let filteredData = [...fullData];
         let currentIndex = 0;
         let isFlipped = false;
 
-        // Elements
+        // --- DOM ELEMENTS ---
         const els = {
             cardInner: document.getElementById('card-inner'),
             frontText: document.getElementById('card-front-text'),
             backVi: document.getElementById('card-back-vi'),
             backIpa: document.getElementById('card-back-ipa'),
             backEn: document.getElementById('card-back-en'),
+            counter: document.getElementById('counter-text'),
             indexDisplay: document.getElementById('index-display'),
             searchInput: document.getElementById('search-input'),
             btnPrev: document.getElementById('btn-prev'),
@@ -634,14 +569,12 @@
             textMaster: document.getElementById('text-master')
         };
 
-        // Render
+        // --- RENDER ---
         function renderCard() {
             if (filteredData.length === 0) {
                 els.flashcardArea.style.display = 'none';
                 els.noResults.classList.remove('hidden');
-                els.noResults.innerHTML = currentMode === 'learning' 
-                    ? '<i class="fas fa-check-circle text-4xl mb-2 text-green-500"></i><p class="mt-2 font-medium">Tuyệt vời! Bạn đã thuộc hết rồi.</p>' 
-                    : '<i class="fas fa-book-open text-4xl mb-2 text-slate-600"></i><p class="mt-2 font-medium">Chưa có thẻ nào đã thuộc.</p>';
+                els.noResults.textContent = currentMode === 'learning' ? "Đã thuộc hết rồi! Qua tab kia ôn tập đi." : "Chưa có từ nào đã thuộc.";
                 els.indexDisplay.textContent = "0 / 0";
                 return;
             }
@@ -657,15 +590,14 @@
 
             els.indexDisplay.textContent = `${currentIndex + 1} / ${filteredData.length}`;
             
-            // Update Master Button state
             if (currentMode === 'learning') {
-                els.iconMaster.className = "far fa-check-circle text-lg group-hover:scale-110 transition-transform";
+                els.iconMaster.className = "far fa-check-circle text-lg";
                 els.textMaster.textContent = "Đã thuộc?";
-                els.btnToggleMaster.className = "flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300 hover:border-green-500 hover:text-green-400 transition active:scale-95";
+                els.btnToggleMaster.className = "absolute -top-10 left-0 w-auto px-3 h-8 text-gray-400 hover:text-green-400 transition z-50 flex items-center justify-center gap-2 font-bold text-sm bg-gray-800/50 rounded-full border border-gray-700";
             } else {
-                els.iconMaster.className = "fas fa-times-circle text-lg group-hover:scale-110 transition-transform";
+                els.iconMaster.className = "fas fa-times-circle text-lg";
                 els.textMaster.textContent = "Học lại";
-                els.btnToggleMaster.className = "flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300 hover:border-yellow-500 hover:text-yellow-400 transition active:scale-95";
+                els.btnToggleMaster.className = "absolute -top-10 left-0 w-auto px-3 h-8 text-gray-400 hover:text-yellow-400 transition z-50 flex items-center justify-center gap-2 font-bold text-sm bg-gray-800/50 rounded-full border border-gray-700";
             }
 
             els.btnPrev.disabled = filteredData.length <= 1;
@@ -674,7 +606,6 @@
             els.btnNext.style.opacity = filteredData.length <= 1 ? "0.3" : "1";
         }
 
-        // --- CORE FUNCTIONS ---
         function flipCard() {
             isFlipped = !isFlipped;
             els.cardInner.classList.toggle('card-flipped', isFlipped);
@@ -710,18 +641,18 @@
             }
         }
 
-        // --- EVENT LISTENERS ---
-        
-        // Mode Switch
+        // --- MODE SWITCHING ---
         function setMode(mode) {
             currentMode = mode;
+            
             if (mode === 'learning') {
-                els.tabLearning.className = "flex-1 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all tab-active";
-                els.tabMastered.className = "flex-1 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all tab-inactive";
+                els.tabLearning.className = "flex-1 py-2 rounded-lg text-sm font-bold transition-all tab-active border shadow-sm";
+                els.tabMastered.className = "flex-1 py-2 rounded-lg text-sm font-bold transition-all tab-inactive border border-transparent hover:bg-gray-700";
             } else {
-                els.tabLearning.className = "flex-1 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all tab-inactive";
-                els.tabMastered.className = "flex-1 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all tab-active";
+                els.tabLearning.className = "flex-1 py-2 rounded-lg text-sm font-bold transition-all tab-inactive border border-transparent hover:bg-gray-700";
+                els.tabMastered.className = "flex-1 py-2 rounded-lg text-sm font-bold transition-all tab-active border shadow-sm";
             }
+
             fullData = loadData();
             filteredData = [...fullData];
             currentIndex = 0;
@@ -730,10 +661,11 @@
             els.searchInput.value = ''; 
             renderCard();
         }
+
         els.tabLearning.addEventListener('click', () => setMode('learning'));
         els.tabMastered.addEventListener('click', () => setMode('mastered'));
 
-        // Toggle Master
+        // --- TOGGLE MASTERED ---
         els.btnToggleMaster.addEventListener('click', (e) => {
             e.stopPropagation();
             const currentCard = filteredData[currentIndex];
@@ -746,7 +678,7 @@
                 if (!masteredList.includes(currentCard.en)) {
                     masteredList.push(currentCard.en);
                     localStorage.setItem('my_mastered_list', JSON.stringify(masteredList));
-                    // Animation Fade Out
+                    
                     els.flashcardArea.classList.add('opacity-0', 'scale-95', 'transition-all');
                     setTimeout(() => {
                         fullData = loadData(); 
@@ -759,7 +691,7 @@
             } else {
                 masteredList = masteredList.filter(word => word !== currentCard.en);
                 localStorage.setItem('my_mastered_list', JSON.stringify(masteredList));
-                // Animation Fade Out
+                
                 els.flashcardArea.classList.add('opacity-0', 'scale-95', 'transition-all');
                 setTimeout(() => {
                     fullData = loadData();
@@ -771,21 +703,25 @@
             }
         });
 
-        // Add Modal
+        // --- MODAL & ADD ---
         els.btnAddModal.addEventListener('click', () => {
             els.addModal.classList.remove('hidden');
             els.inputEn.focus();
         });
+        
         els.btnCancel.addEventListener('click', () => {
             els.addModal.classList.add('hidden');
-            els.inputEn.value = ''; els.inputVi.value = '';
+            els.inputEn.value = '';
+            els.inputVi.value = '';
         });
 
         async function fetchIPA(word) {
             try {
                 const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
                 const data = await res.json();
-                if (Array.isArray(data) && data.length > 0) return data[0].phonetic || (data[0].phonetics.find(p => p.text)?.text) || "";
+                if (Array.isArray(data) && data.length > 0) {
+                    return data[0].phonetic || (data[0].phonetics.find(p => p.text)?.text) || "";
+                }
                 return "";
             } catch (err) { return ""; }
         }
@@ -798,7 +734,7 @@
             const stored = localStorage.getItem('my_flashcards');
             const personalData = stored ? JSON.parse(stored) : [];
             if (personalData.some(c => c.en.toLowerCase() === en.toLowerCase())) {
-                if(!confirm("Từ này đã thêm rồi. Thêm nữa không?")) return;
+                if(!confirm("Từ này bạn đã thêm rồi. Thêm nữa không?")) return;
             }
 
             els.btnSave.disabled = true;
@@ -826,7 +762,7 @@
             els.spinner.classList.add('hidden');
         });
 
-        // Delete
+        // --- DELETE ---
         els.btnDelete.addEventListener('click', (e) => {
             e.stopPropagation(); 
             const currentCard = filteredData[currentIndex];
@@ -839,7 +775,6 @@
                     personalData.splice(indexToDelete, 1);
                     localStorage.setItem('my_flashcards', JSON.stringify(personalData));
                     
-                    // Also remove from Mastered list if exists
                     const storedMastered = localStorage.getItem('my_mastered_list');
                     let masteredList = storedMastered ? JSON.parse(storedMastered) : [];
                     if (masteredList.includes(currentCard.en)) {
@@ -848,11 +783,11 @@
                     }
 
                     fullData = loadData();
+                    filteredData = [...fullData];
+                    
                     if (els.searchInput.value) {
                          const term = els.searchInput.value.toLowerCase().trim();
                          filteredData = fullData.filter(item => item.en.toLowerCase().includes(term) || item.vi.toLowerCase().includes(term));
-                    } else {
-                        filteredData = [...fullData];
                     }
                     
                     if (currentIndex >= filteredData.length) currentIndex = Math.max(0, filteredData.length - 1);
@@ -863,7 +798,7 @@
             }
         });
 
-        // Import/Export
+        // --- IMPORT/EXPORT ---
         els.btnExport.addEventListener('click', () => {
             const personal = localStorage.getItem('my_flashcards') || "[]";
             const mastered = localStorage.getItem('my_mastered_list') || "[]";
@@ -886,6 +821,7 @@
                     const imported = JSON.parse(event.target.result);
                     let newCards = [];
                     let newMastered = [];
+
                     if (Array.isArray(imported)) {
                         newCards = imported; 
                     } else if (imported.cards) {
@@ -919,40 +855,36 @@
             e.target.value = '';
         });
 
-        // Search & Inputs
+        // --- SEARCH, SWIPE, KEYBOARD ---
         els.searchInput.addEventListener('input', (e) => {
             const term = e.target.value.toLowerCase().trim();
-            filteredData = fullData.filter(item => item.en.toLowerCase().includes(term) || item.vi.toLowerCase().includes(term));
+            filteredData = fullData.filter(item => 
+                item.en.toLowerCase().includes(term) || 
+                item.vi.toLowerCase().includes(term)
+            );
             currentIndex = 0;
             isFlipped = false;
             els.cardInner.classList.remove('card-flipped');
             renderCard();
         });
 
-        // Interactions
         els.flashcardArea.addEventListener('click', flipCard);
         els.btnNext.addEventListener('click', nextCard);
         els.btnPrev.addEventListener('click', prevCard);
         els.btnSpeakFront.addEventListener('click', (e) => { e.stopPropagation(); speak(filteredData[currentIndex].en); });
         els.btnSpeakBack.addEventListener('click', (e) => { e.stopPropagation(); speak(filteredData[currentIndex].en); });
 
-        // Swipe
         let touchStartX = 0; let touchStartY = 0; const minSwipeDistance = 50;
         document.addEventListener('touchstart', (e) => {
             if (e.target.closest('#add-modal')) return;
             touchStartX = e.changedTouches[0].screenX; touchStartY = e.changedTouches[0].screenY;
         }, { passive: true });
-        
         document.addEventListener('touchend', (e) => {
             if (e.target.closest('#add-modal')) return;
             const dX = touchStartX - e.changedTouches[0].screenX;
             const dY = touchStartY - e.changedTouches[0].screenY;
-            if (Math.abs(dX) > Math.abs(dY) && Math.abs(dX) > minSwipeDistance) {
-                dX > 0 ? nextCard() : prevCard();
-            }
+            if (Math.abs(dX) > Math.abs(dY) && Math.abs(dX) > minSwipeDistance) dX > 0 ? nextCard() : prevCard();
         }, { passive: true });
-
-        // Keyboard
         window.addEventListener('keydown', (e) => {
             if (document.activeElement === els.searchInput || !els.addModal.classList.contains('hidden')) return;
             if (e.key === 'ArrowRight') nextCard();
@@ -960,12 +892,11 @@
             if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); flipCard(); }
         });
 
-        // PWA
+        // Init PWA
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
         }
 
-        // Start
         renderCard();
     </script>
 </body>
